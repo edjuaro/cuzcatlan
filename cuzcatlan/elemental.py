@@ -10,6 +10,10 @@ def custom_pearson(x, y):
     return scipy.stats.pearsonr(x, y)[0]
 
 
+def absolute_pearson(x, y):
+    return np.abs(scipy.stats.pearsonr(x, y)[0])
+
+
 def uncentered_pearson(x, y):
     if len(x) != len(y):
         # Uncentered Pearson Correlation cannot be computed for vectors of different length.
