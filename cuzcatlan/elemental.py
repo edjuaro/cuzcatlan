@@ -6,6 +6,16 @@ def hellopipilworld():
     return u'Niltze Cemanahuac! (Hello "World"! in Nahuatl.)'
 
 
+def list2cls(in_list, name_of_out='output.cls'):
+    """This function creates a CLS file from a list-like object"""
+    # print("~~~~~"+str(metadata_subset.shape)+'~~~~~')
+    cls = open(name_of_out, 'w')
+    cls.write("{}\t{}\t1\n".format(len(in_list), len(np.unique(in_list))))
+    cls.write("#\t{}\n".format("\t".join(np.unique(in_list).astype(str))))
+    cls.write('\t'.join(in_list.astype(str))+'\n')
+    cls.close()
+
+
 def custom_pearson(x, y):
     return scipy.stats.pearsonr(x, y)[0]
 
