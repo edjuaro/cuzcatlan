@@ -1,5 +1,14 @@
+from numpy import asarray, exp, finfo, isnan, log, sign, sqrt, sum, sort
+from numpy.random import random_sample, seed
+from scipy.stats import pearsonr
+from scipy.stats import gaussian_kde
+import numpy as np
+
+EPS = finfo(float).eps
+
+
 def information_coefficient(x, y, n_grids=25,
-                            jitter=1E-10, random_seed=0):
+                            jitter=1E-10, random_seed=20170821):
     """
     Compute the information coefficient between x and y, which are
         continuous, categorical, or binary vectors. This function uses only python libraries -- No R is needed.
@@ -19,8 +28,12 @@ def information_coefficient(x, y, n_grids=25,
 
     x, y = drop_nan_columns([x, y])
 
-    # Need at least 3 values to compute bandwidth
-    if len(x) < 3 or len(y) < 3:
+    try:
+        # Need at least 3 values to compute bandwidth
+        if len(x) < 3 or len(y) < 3:
+            return 0
+    except TypeError:
+        # If x and y are numbers, we cannot continue and IC is zero.
         return 0
 
     x = asarray(x, dtype=float)
@@ -77,3 +90,23 @@ def information_coefficient(x, y, n_grids=25,
         ic = 0
 
     return ic
+
+
+def drop_nan_columns(arrays):
+    """
+    Keep only not-NaN column positions in all arrays.
+    :param arrays: iterable of numpy arrays; must have the same length
+    :return: list of numpy arrays; none of the arrays contains NaN
+    """
+
+    try:
+        not_nan_filter = np.ones(len(arrays[0]), dtype=bool)
+        # Keep column indices without missing value in all arrays
+        for a in arrays:
+            not_nan_filter &= ~np.isnan(a)
+
+        return [a[not_nan_filter] for a in arrays]
+
+    except TypeError:  # this means this is a number comparison, not a vector.
+        # Keep "all" one column indices
+        return arrays
