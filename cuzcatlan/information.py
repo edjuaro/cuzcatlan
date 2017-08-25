@@ -1,3 +1,6 @@
+"""Parts of this code are borrowed from the CCAL library: https://github.com/UCSD-CCAL"""
+
+
 from numpy import asarray, exp, finfo, isnan, log, sign, sqrt, sum, sort
 from numpy.random import random_sample, seed
 from scipy.stats import pearsonr
