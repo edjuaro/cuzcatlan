@@ -54,3 +54,14 @@ def absolute_uncentered_pearson(x, y):
     else:
         # Using the definition from eq (4) in https://www.biomedcentral.com/content/supplementary/1477-5956-9-30-S4.PDF
         return np.abs(np.sum(np.multiply(x, y)) / (np.sqrt(np.sum(np.square(x))) * np.sqrt(np.sum(np.square(y)))))
+
+
+def mydist(p1, p2):
+    # a custom function that just computes Euclidean distance
+    diff = p1 - p2
+    return np.vdot(diff, diff) ** 0.5
+
+
+def dendodist(V, dist=mydist):
+    dists = np.array([dist(a[0], a[1]) for a in V])
+    return np.cumsum(dists)
