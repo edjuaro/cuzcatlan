@@ -1,7 +1,7 @@
 from setuptools import setup
 
 setup(name='cuzcatlan',
-      version='0.1.2',
+      version='0.1.3',
       description="Edwin Juarez's personal library.",
       url='https://github.com/edjuaro/cuzcatlan',
       author='Edwin F. Juarez',
