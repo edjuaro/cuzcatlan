@@ -24,6 +24,10 @@ def custom_spearman(x, y):
     return scipy.stats.spearmanr(x, y)[0]
 
 
+def absolute_spearman(x, y):
+    return abs(scipy.stats.spearmanr(x, y)[0])
+
+
 def custom_kendall_tau(x, y):
     return scipy.stats.kendalltau(x, y)[0]
 
