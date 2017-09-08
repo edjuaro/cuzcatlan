@@ -71,10 +71,10 @@ def dendodist(V, dist=mydist):
     return np.cumsum(dists)
 
 
-def makeODF(output_data, file_name='noname.odf'):
+def makeODF(output_data, vals, file_name='noname.odf'):
     f = open(file_name, 'w')
     f.write("ODF 1.0\n")  # Hard-coding spance, not tab here.
-    f.write("HeaderLines=21\n")  # hard-coding 19+2 lines here. Needs to change.
+    f.write("HeaderLines=18\n")  # hard-coding 19+2-3 lines here. Needs to change.
     # f.write("COLUMN_NAMES:Rank\tFeature\tDescription\tScore\tFeature P\tFeature P Low\tFeature P High\tFDR(BH)\tQ Value"
     #         "\tBonferroni\tmaxT\tFWER\tFold Change\tALL Mean\tALL Std\tAML Mean\tAML Std\tk\n")
     # f.write("COLUMN_TYPES:int\tString\tString\tdouble\tdouble\tdouble\tdouble\tdouble\tdouble\tdouble\tdouble\tdouble"
@@ -88,23 +88,23 @@ def makeODF(output_data, file_name='noname.odf'):
     # f.write("COLUMN_DESCRIPTIONS:\n")
     # f.write("Model=DiffEx\n")
     f.write("Model=Comparative Marker Selection\n")
-    f.write("Dataset File=[]\n")  # TODO: Write here the .gct filename
-    f.write("Class File=[]\n")  # TODO: Write here the .cls filename
-    f.write("Permutations=10000\n")  # TODO: Write the actual number of permutations
-    f.write("Balanced=false\n")  # TODO: remove this one?
-    f.write("Complete=false\n")  # TODO: remove this one?
-    f.write("Test Direction=2 Sided\n")  # TODO: remove this one?
-    f.write("Class 0=ALL/maybe\n")  # TODO: revise what Class 0 actually means
-    f.write("Class 1=AML/maybe\n")  # TODO: revise what Class 0 actually means
-    f.write("Test Statistic=T-Test\n")  # TODO: write the actual test
+    f.write("Dataset File="+vals['gct']+"\n")
+    f.write("Class File="+vals['cls']+"\n")
+    f.write("Permutations="+str(vals['n_perm'])+"\n")
+    # f.write("Balanced=false\n")  # TODO: remove this one?
+    # f.write("Complete=false\n")  # TODO: remove this one?
+    # f.write("Test Direction=2 Sided\n")  # TODO: remove this one?
+    f.write("Class 0="+vals['class_0']+"\n")
+    f.write("Class 1="+vals['class_1']+"\n")
+    f.write("Test Statistic="+vals['func']+"\n")
     f.write("pi0=\n")
     f.write("lambda=\n")
     f.write("pi0(lambda)=\n")
     f.write("cubic spline(lambda)=\n")
-    f.write("Random Seed=0\n")  # TODO: put the actual random seed here
+    f.write("Random Seed="+str(vals['rand_seed'])+"\n")
     f.write("Smooth p-values=\n")
-    f.write("DataLines=10\n")  # TODO: put the actual value here
+    f.write("DataLines="+str(vals['dat_lines'])+"\n")
     f.write("RowNamesColumn=0\n")
     f.write("RowDescriptionsColumn=1\n")
-    f.write(output_data.to_csv(sep='\t', index=False))
+    f.write(output_data.to_csv(sep='\t', index=False, header=False))
     return
