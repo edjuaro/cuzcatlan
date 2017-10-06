@@ -16,8 +16,12 @@ def list2cls(in_list, name_of_out='output.cls'):
     cls.close()
 
 
-def custom_pearson(x, y):
+def custom_pearson_corr(x, y):
     return scipy.stats.pearsonr(x, y)[0]
+
+
+def custom_pearson_dist(x, y):
+    return 1 - scipy.stats.pearsonr(x, y)[0]
 
 
 def custom_spearman(x, y):
