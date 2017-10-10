@@ -17,30 +17,45 @@ def list2cls(in_list, name_of_out='output.cls'):
 
 
 def custom_pearson_corr(x, y):
+    # [-1,1]
     return scipy.stats.pearsonr(x, y)[0]
 
 
 def custom_pearson_dist(x, y):
+    # [-1,1]
     return 1 - scipy.stats.pearsonr(x, y)[0]
 
 
-def custom_spearman(x, y):
+def custom_spearman_corr(x, y):
     return scipy.stats.spearmanr(x, y)[0]
+
+
+def custom_spearman_dist(x, y):
+    return 1 - scipy.stats.spearmanr(x, y)[0]
 
 
 def absolute_spearman(x, y):
     return abs(scipy.stats.spearmanr(x, y)[0])
 
 
-def custom_kendall_tau(x, y):
+def custom_kendall_tau_corr(x, y):
     return scipy.stats.kendalltau(x, y)[0]
 
 
-def absolute_pearson(x, y):
+def custom_kendall_tau_dist(x, y):
+    return 1 - scipy.stats.kendalltau(x, y)[0]
+
+
+def absolute_pearson_corr(x, y):
     return np.abs(scipy.stats.pearsonr(x, y)[0])
 
 
-def uncentered_pearson(x, y):
+def absolute_pearson_dist(x, y):
+    return 1 - np.abs(scipy.stats.pearsonr(x, y)[0])
+
+
+def uncentered_pearson_corr(x, y):
+    # [-1,1]
     if len(x) != len(y):
         # Uncentered Pearson Correlation cannot be computed for vectors of different length.
         print('Uncentered Pearson Correlation cannot be computed for vectors of different length.')
@@ -53,7 +68,21 @@ def uncentered_pearson(x, y):
         return np.sum(np.multiply(x, y)) / (np.sqrt(np.sum(np.square(x))) * np.sqrt(np.sum(np.square(y))))
 
 
-def absolute_uncentered_pearson(x, y):
+def uncentered_pearson_dist(x, y):
+    # [0,2]
+    if len(x) != len(y):
+        # Uncentered Pearson Correlation cannot be computed for vectors of different length.
+        print('Uncentered Pearson Correlation cannot be computed for vectors of different length.')
+        return np.nan
+
+    else:
+        # Using the definition from eq (4) in https://www.biomedcentral.com/content/supplementary/1477-5956-9-30-S4.PDF
+        # x_squared =
+        # y_squared =
+        return 1 - (np.sum(np.multiply(x, y)) / (np.sqrt(np.sum(np.square(x))) * np.sqrt(np.sum(np.square(y)))))
+
+
+def absolute_uncentered_pearson_corr(x, y):
     if len(x) != len(y):
         # Uncentered Pearson Correlation cannot be computed for vectors of different length.
         print('Uncentered Pearson Correlation cannot be computed for vectors of different length.')
@@ -64,15 +93,50 @@ def absolute_uncentered_pearson(x, y):
         return np.abs(np.sum(np.multiply(x, y)) / (np.sqrt(np.sum(np.square(x))) * np.sqrt(np.sum(np.square(y)))))
 
 
+def absolute_uncentered_pearson_dist(x, y):
+    if len(x) != len(y):
+        # Uncentered Pearson Correlation cannot be computed for vectors of different length.
+        print('Uncentered Pearson Correlation cannot be computed for vectors of different length.')
+        return np.nan
+
+    else:
+        # Using the definition from eq (4) in https://www.biomedcentral.com/content/supplementary/1477-5956-9-30-S4.PDF
+        return 1- (np.abs(np.sum(np.multiply(x, y)) / (np.sqrt(np.sum(np.square(x))) * np.sqrt(np.sum(np.square(y))))))
+
+
 def mydist(p1, p2):
     # a custom function that just computes Euclidean distance
     diff = p1 - p2
     return np.vdot(diff, diff) ** 0.5
 
 
+def custom_euclidean_dist(x, y):
+    return scipy.spatial.distance.euclidean(x, y)
+
+
+def custom_euclidean_sim(x, y):
+    return 1/(1+scipy.spatial.distance.euclidean(x, y))
+
+
 def dendodist(V, dist=mydist):
     dists = np.array([dist(a[0], a[1]) for a in V])
     return np.cumsum(dists)
+
+
+def custom_manhattan_dist(x, y):
+    return scipy.spatial.distance.cityblock(x, y)
+
+
+def custom_manhattan_sim(x, y):
+    return 1/(1+scipy.spatial.distance.cityblock(x, y))
+
+
+def custom_cosine_dist(x, y):
+    return scipy.spatial.distance.cosine(x, y)
+
+
+def custom_cosine_sim(x, y):
+    return 1-scipy.spatial.distance.cosine(x, y)
 
 
 def makeODF(output_data, vals, file_name='noname.odf'):

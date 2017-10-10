@@ -10,6 +10,9 @@ import numpy as np
 EPS = finfo(float).eps
 
 
+def information_coefficient_dist(x, y, n_grids=25, jitter=1E-10, random_seed=20170821):
+    return 1 - information_coefficient(x, y, n_grids, jitter, random_seed)
+
 def information_coefficient(x, y, n_grids=25,
                             jitter=1E-10, random_seed=20170821):
     """
@@ -31,68 +34,76 @@ def information_coefficient(x, y, n_grids=25,
 
     x, y = drop_nan_columns([x, y])
 
-    try:
-        # Need at least 3 values to compute bandwidth
-        if len(x) < 3 or len(y) < 3:
+    if (x == y).all():
+        return 1
+    else:
+        try:
+            # Need at least 3 values to compute bandwidth
+            if len(x) < 3 or len(y) < 3:
+                return 0
+        except TypeError:
+            # If x and y are numbers, we cannot continue and IC is zero.
             return 0
-    except TypeError:
-        # If x and y are numbers, we cannot continue and IC is zero.
-        return 0
 
-    x = asarray(x, dtype=float)
-    y = asarray(y, dtype=float)
+        x = asarray(x, dtype=float)
+        y = asarray(y, dtype=float)
 
-    # Add jitter
-    seed(random_seed)
-    x += random_sample(x.size) * jitter
-    y += random_sample(y.size) * jitter
+        # Add jitter
+        seed(random_seed)
+        x += random_sample(x.size) * jitter
+        y += random_sample(y.size) * jitter
 
-    # Compute bandwidths
-    cor, p = pearsonr(x, y)
+        # Compute bandwidths
+        cor, p = pearsonr(x, y)
 
-    # bandwidth_x = asarray(bcv(x)[0]) * (1 + (-0.75) * abs(cor))
-    # bandwidth_y = asarray(bcv(y)[0]) * (1 + (-0.75) * abs(cor))
+        # bandwidth_x = asarray(bcv(x)[0]) * (1 + (-0.75) * abs(cor))
+        # bandwidth_y = asarray(bcv(y)[0]) * (1 + (-0.75) * abs(cor))
 
-    # Compute P(x, y), P(x), P(y)
-    # fxy = asarray(
-    #     kde2d(x, y, asarray([bandwidth_x, bandwidth_y]), n=asarray([n_grids]))[
-    #         2]) + EPS
+        # Compute P(x, y), P(x), P(y)
+        # fxy = asarray(
+        #     kde2d(x, y, asarray([bandwidth_x, bandwidth_y]), n=asarray([n_grids]))[
+        #         2]) + EPS
 
-    # Estimate fxy using scipy.stats.gaussian_kde
-    xmin = x.min()
-    xmax = x.max()
-    ymin = y.min()
-    ymax = y.max()
-    X, Y = np.mgrid[xmin:xmax:complex(0, n_grids), ymin:ymax:complex(0, n_grids)]
-    positions = np.vstack([X.ravel(), Y.ravel()])
-    values = np.vstack([x, y])
-    kernel = gaussian_kde(values)
-    fxy = np.reshape(kernel(positions).T, X.shape) + EPS
+        # Estimate fxy using scipy.stats.gaussian_kde
+        xmin = x.min()
+        xmax = x.max()
+        ymin = y.min()
+        ymax = y.max()
+        X, Y = np.mgrid[xmin:xmax:complex(0, n_grids), ymin:ymax:complex(0, n_grids)]
+        positions = np.vstack([X.ravel(), Y.ravel()])
+        values = np.vstack([x, y])
+        # print(values)
+        kernel = gaussian_kde(values)
+        fxy = np.reshape(kernel(positions).T, X.shape) + EPS
 
-    dx = (x.max() - x.min()) / (n_grids - 1)
-    dy = (y.max() - y.min()) / (n_grids - 1)
-    pxy = fxy / (fxy.sum() * dx * dy)
-    px = pxy.sum(axis=1) * dy
-    py = pxy.sum(axis=0) * dx
+        dx = (x.max() - x.min()) / (n_grids - 1)
+        dy = (y.max() - y.min()) / (n_grids - 1)
+        pxy = fxy / (fxy.sum() * dx * dy)
+        px = pxy.sum(axis=1) * dy
+        py = pxy.sum(axis=0) * dx
 
-    # Compute mutual information;
-    mi = (pxy * log(pxy / (asarray([px] * n_grids).T *
-                           asarray([py] * n_grids)))).sum() * dx * dy
+        # Compute mutual information;
+        mi = (pxy * log(pxy / (asarray([px] * n_grids).T *
+                               asarray([py] * n_grids)))).sum() * dx * dy
 
-    # # Get H(x, y), H(x), and H(y)
-    # hxy = - (pxy * log(pxy)).sum() * dx * dy
-    # hx = -(px * log(px)).sum() * dx
-    # hy = -(py * log(py)).sum() * dy
-    # mi = hx + hy - hxy
+        # # Get H(x, y), H(x), and H(y)
+        # hxy = - (pxy * log(pxy)).sum() * dx * dy
+        # hx = -(px * log(px)).sum() * dx
+        # hy = -(py * log(py)).sum() * dy
+        # mi = hx + hy - hxy
 
-    # Compute information coefficient
-    ic = sign(cor) * sqrt(1 - exp(-2 * mi))
+        # Compute information coefficient
+        ic = sign(cor) * sqrt(1 - exp(-2 * mi))
 
-    # TODO: debug when MI < 0 and |MI|  ~ 0 resulting in IC = nan
-    if isnan(ic):
-        ic = 0
+        # TODO: debug when MI < 0 and |MI|  ~ 0 resulting in IC = nan
+        if isnan(ic):
+            ic = 0
 
-    return ic
+        return ic
+
+
+def absolute_information_coefficient_dist(x, y, n_grids=25, jitter=1E-10, random_seed=20170821):
+    return 1 - absolute_information_coefficient(x, y, n_grids, jitter, random_seed)
 
 
 def absolute_information_coefficient(x, y, n_grids=25,
