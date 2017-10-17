@@ -6,14 +6,27 @@ def hellopipilworld():
     return u'Niltze Cemanahuac! (Hello "World"! in Nahuatl.)'
 
 
-def list2cls(in_list, name_of_out='output.cls'):
+def list2cls(in_list, name_of_out='output.cls', sep='\t'):
     """This function creates a CLS file from a list-like object"""
     # print("~~~~~"+str(metadata_subset.shape)+'~~~~~')
     cls = open(name_of_out, 'w')
-    cls.write("{}\t{}\t1\n".format(len(in_list), len(np.unique(in_list))))
-    cls.write("#\t{}\n".format("\t".join(np.unique(in_list).astype(str))))
-    cls.write('\t'.join(in_list.astype(str))+'\n')
+    cls.write("{}{}{}{}1\n".format(len(in_list), sep, len(np.unique(in_list)), sep))
+    cls.write("#{}{}\n".format(sep, sep.join(np.unique(in_list).astype(str))))
+    cls.write(sep.join(in_list.astype(str))+'\n')
     cls.close()
+
+
+def df2gct(df, extra_columns=0, use_index=True, name='output.gct', add_dummy_descriptions=False):
+    if add_dummy_descriptions:
+        if add_dummy_descriptions not in list(df):
+            df.insert(0, 'Description', df.index)
+            extra_columns += 1
+    f = open(name, 'w')
+    f.write("#1.2\n")
+    f.write("\t".join([str(df.shape[0]), str(df.shape[1] - extra_columns)]) + "\n")
+    f.write(df.to_csv(sep='\t', index=use_index))
+    f.close()
+    return
 
 
 def custom_pearson_corr(x, y):
