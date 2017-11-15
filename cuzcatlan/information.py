@@ -386,10 +386,13 @@ def make_match_panel(target,
         DataFrame: (n_features, 4 ['Score', '<confidence> MoE', 'p-value',
             'FDR'])
     """
+    print(target.index)
+    print(features.columns)
 
     # Sort target and features.columns (based on target)
     target = target.loc[target.index & features.columns].sort_values(
         ascending=target_ascending or target.dtype == 'O')
+    print(target)
 
     # Drop constant rows
     features = drop_df_slices(
@@ -405,6 +408,9 @@ def make_match_panel(target,
         target = target.map(target_o_to_int)
 
     if target_type in ('binary', 'categorical'):
+
+        print(features.values, target.values)
+
         # Cluster by group
         columns = cluster_2d_array_slices_by_group(
             nan_to_num(features.values), nan_to_num(target.values))

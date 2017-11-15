@@ -10,7 +10,7 @@ temp = open("test_data/BRCA_minimal.cls")
 temp.readline()
 temp.readline()
 classes = [int(i) for i in temp.readline().strip('\n').split(' ')]
-classes = pd.Series(classes)
+classes = pd.Series(classes, index=data_df.columns)
 
 differential_gene_expression(phenotypes=classes, gene_expression=data_df, output_filename='DE_test',
                              ranking_method=cusca.custom_pearson_corr)
