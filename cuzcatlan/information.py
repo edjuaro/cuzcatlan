@@ -13,12 +13,14 @@ from os import mkdir, remove
 from os.path import abspath, exists, isdir, islink, split, isfile
 from shutil import copy, copytree, rmtree
 from math import ceil
-from matplotlib.pyplot import savefig
+from matplotlib.pyplot import savefig, figure, subplot, gca, sca, suptitle
+from matplotlib.gridspec import GridSpec
 from matplotlib.cm import Paired, Set3, bwr, tab20, tab20b, tab20c
 from scipy.cluster.hierarchy import dendrogram, linkage
 from multiprocessing.pool import Pool
 from statsmodels.sandbox.stats.multicomp import multipletests
-from ccal_style import *
+from seaborn import heatmap, despine, set_style
+from .ccal_style import *
 
 
 EPS = finfo(float).eps
@@ -1359,3 +1361,143 @@ def normalize_1d_array(array_1d, method, rank_method='average'):
 
     else:
         raise ValueError('Unknown method: {}.'.format(method))
+
+
+def make_random_categorical_colormap(n_colors=None, bad_color=None):
+    """
+    Make random categorical colormap.
+    Arguments:
+        n_colors (int):
+        bad_color (matplotlib color):
+    Returns:
+        matplotlib.Colormap:
+    """
+
+    color_map = ListedColormap([make_random_color() for i in range(n_colors)])
+
+    if bad_color:
+        color_map.set_bad(bad_color)
+
+    return color_map
+
+
+def make_random_color():
+    """
+    Make a random color.
+    Arguments:
+        None
+    Returns:
+        str: hexcolor
+    """
+
+    return '#' + ''.join([choice('0123456789ABCDEF') for x in range(6)])
+
+
+def normalize_2d_array(array_2d, method, axis=None, rank_method='average'):
+    """
+    Normalize array_2d.
+    Arguments:
+        array_2d (array): (n, m)
+        method (str): '-0-' | '0-1' | 'rank'
+        axis (int | str): 'global' | 0 | 1 |
+        rank_method (str): 'average' | 'min' | 'max' | 'dense' | 'ordinal'
+    Returns:
+        array: (n, m)
+    """
+
+    if axis is None:
+
+        values = array_2d[~isnan(array_2d)]
+        size = values.size
+        mean = values.mean()
+        std = values.std()
+        min_ = values.min()
+        max_ = values.max()
+
+        if method == '-0-':
+
+            if std:
+                return (array_2d - mean) / std
+            else:
+                print('std == 0: / size instead of 0-1 ...')
+                return array_2d / size
+
+        elif method == '0-1':
+
+            if max_ - min_:
+                return (array_2d - min_) / (max_ - min_)
+            else:
+                print('(max - min) ==  0: / size instead of 0-1 ...')
+                return array_2d / size
+
+        elif method == 'rank':
+
+            array_2d[isnan(array_2d)] = mean
+
+            return (rankdata(array_2d, method=rank_method) /
+                    size).reshape(array_2d.shape)
+
+        else:
+            raise ValueError('Unknown method: {}.'.format(method))
+
+    elif axis == 0 or axis == 1:
+
+        return apply_along_axis(
+            normalize_1d_array,
+            axis,
+            array_2d,
+            method=method,
+            rank_method=rank_method)
+
+    else:
+        raise ValueError('Unknown axis: {}.'.format(axis))
+
+
+def get_unique_objects_in_order(iterable):
+    """
+    Get unique objects in the order of their appearance in iterable.
+    Arguments:
+        iterable (iterable): objects
+    Returns:
+        list: (n_unique_objects); unique objects ordered by their appearances
+            in iterable
+    """
+
+    unique_objects_in_order = []
+
+    for o in iterable:
+
+        if o not in unique_objects_in_order:
+            unique_objects_in_order.append(o)
+
+    return unique_objects_in_order
+
+
+def merge_dicts_with_function(dict_0, dict_1, function):
+    """
+    Merge dict_0 and dict_1, apply function to values keyed by the same key.
+    Arguments:
+        dict_0 (dict);
+        dict_1 (dict):
+        function (callable):
+    Returns:
+        dict: merged dict
+    """
+
+    merged_dict = {}
+
+    for k in dict_0.keys() | dict_1.keys():
+
+        if k in dict_0 and k in dict_1:
+            merged_dict[k] = function(dict_0.get(k), dict_1.get(k))
+
+        elif k in dict_0:
+            merged_dict[k] = dict_0.get(k)
+
+        elif k in dict_1:
+            merged_dict[k] = dict_1.get(k)
+
+        else:
+            raise ValueError('dict_0 or dict_1 changed during iteration.')
+
+    return merged_dict
