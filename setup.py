@@ -1,8 +1,8 @@
 from setuptools import setup
 
 setup(name='cuzcatlan',
-      version='0.2.2',
-      description="Edwin Juarez's personal library.",
+      version='0.3.0',
+      description="Edwin Juarez's support library for GenePattern.",
       url='https://github.com/edjuaro/cuzcatlan',
       author='Edwin F. Juarez',
       author_email='ejuarez@ucsd.edu',
@@ -15,5 +15,6 @@ setup(name='cuzcatlan',
             'pandas',
             'matplotlib',
             'statsmodels',
+            'seaborn',
             ],
       )
