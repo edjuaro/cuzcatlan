@@ -22,7 +22,8 @@ from statsmodels.sandbox.stats.multicomp import multipletests
 from seaborn import heatmap, despine, set_style
 from .ccal_style import *
 import pandas as pd
-
+import urllib.request
+import validators
 
 EPS = finfo(float).eps
 RANDOM_SEED = 20121020
@@ -238,28 +239,61 @@ def drop_nan_columns(arrays):
 
 
 def differential_gene_expression(
-        phenotypes:"CLS filename; input binary phenotype/class distinction",
-        gene_expression:"GCT filename; data matrix with input gene expression profiles",
-        output_filename:"Output files will have this name plus extensions .txt and .pdf",
-        ranking_method:"The function to use to compute similarity between phenotypes and gene_expression",
-        max_number_of_genes_to_show:"Maximum number of genes to show in the heatmap"=20,
-        number_of_permutations:"Number of random permutations to estimate statistical significance (p-values and FDRs)"=10,
-        title:"The title of the heatmap"=None,
-        random_seed:"Random number generator seed (can be set to a user supplied integer for reproducibility)"=RANDOM_SEED):
+        phenotypes: "CLS filename; input binary phenotype/class distinction",
+        gene_expression: "GCT filename; data matrix with input gene expression profiles",
+        output_filename: "Output files will have this name plus extensions .txt and .pdf",
+        ranking_method: "The function to use to compute similarity between phenotypes and gene_expression",
+        max_number_of_genes_to_show: "Maximum number of genes to show in the heatmap"=20,
+        number_of_permutations: "Number of random permutations to estimate statistical significance "
+                                "(p-values and FDRs)"=10,
+        title: "The title of the heatmap"=None,
+        random_seed: "Random number generator seed (can be set to a user supplied integer "
+                     "for reproducibility)"=RANDOM_SEED):
     """
     Perform differential analysis on gene expression data of two phenotypes.
     """
+    data_df = pd.read_table(gene_expression, header=2, index_col=0)
+    data_df.drop('Description', axis=1, inplace=True)
+
+    if validators.url(phenotypes):
+        urlfile, __ = urllib.request.urlretrieve(phenotypes)
+    else:
+        urlfile = phenotypes
+
+    temp = open(urlfile)
+    temp.readline()
+    temp.readline()
+    classes = [int(i) for i in temp.readline().strip('\n').split(' ')]
+    classes = pd.Series(classes, index=data_df.columns)
+
+    gene_scores = make_match_panel(
+        features=data_df,
+        target=classes,
+        function=ranking_method,
+        target_ascending=False,
+        n_top_features=0.99,
+        max_n_features=max_number_of_genes_to_show,
+        n_samplings=30,
+        n_permutations=number_of_permutations,
+        random_seed=random_seed,
+        target_type='binary',
+        title=title,
+        file_path_prefix=output_filename)
+
+    return gene_scores
 
 
-def match_to_profile(phenotypes,
-                     gene_expression,
-                     output_filename,
-                     ranking_method=compute_information_coefficient,
-                     phenotypes_row_label=None,
-                     max_number_of_genes_to_show=20,
-                     number_of_permutations=10,
-                     title=None,
-                     random_seed=RANDOM_SEED):
+def match_to_profile(
+        phenotypes: "CLS filename; input binary phenotype/class distinction",
+        gene_expression: "GCT filename; data matrix with input gene expression profiles",
+        output_filename: "Output files will have this name plus extensions .txt and .pdf",
+        ranking_method: "The function to use to compute similarity between phenotypes and gene_expression",
+        max_number_of_genes_to_show: "Maximum number of genes to show in the heatmap"=20,
+        number_of_permutations: "Number of random permutations to estimate statistical significance "
+                                "(p-values and FDRs)"=10,
+        title: "The title of the heatmap"=None,
+        random_seed: "Random number generator seed (can be set to a user supplied integer "
+                     "for reproducibility)"=RANDOM_SEED):
     """
     Sort genes according to their association with a continuous phenotype or class vector.
     :param phenotypes: Series; input binary phenotype/class distinction
