@@ -21,6 +21,7 @@ from multiprocessing.pool import Pool
 from statsmodels.sandbox.stats.multicomp import multipletests
 from seaborn import heatmap, despine, set_style
 from .ccal_style import *
+import pandas as pd
 
 
 EPS = finfo(float).eps
@@ -237,50 +238,17 @@ def drop_nan_columns(arrays):
 
 
 def differential_gene_expression(
-        phenotypes,
-        gene_expression,
-        output_filename,
-        ranking_method=compute_information_coefficient,
-        max_number_of_genes_to_show=2000,
-        number_of_permutations=10,
-        title=None,
-        random_seed=RANDOM_SEED):
+        phenotypes:"CLS filename; input binary phenotype/class distinction",
+        gene_expression:"GCT filename; data matrix with input gene expression profiles",
+        output_filename:"Output files will have this name plus extensions .txt and .pdf",
+        ranking_method:"The function to use to compute similarity between phenotypes and gene_expression",
+        max_number_of_genes_to_show:"Maximum number of genes to show in the heatmap"=20,
+        number_of_permutations:"Number of random permutations to estimate statistical significance (p-values and FDRs)"=10,
+        title:"The title of the heatmap"=None,
+        random_seed:"Random number generator seed (can be set to a user supplied integer for reproducibility)"=RANDOM_SEED):
     """
-    Sort genes according to their association with a binary phenotype or class vector.
-    :param phenotypes: CLS file; input binary phenotype/class distinction
-    :param gene_expression: GCT file; data matrix with input gene expression profiles
-    :param output_filename: str; output files will have this name plus extensions .txt and .pdf
-    :param ranking_method:callable; the function to use to compute similarity between phenotypes and gene_expression.
-    :param max_number_of_genes_to_show: int; maximum number of genes to show in the heatmap
-    :param number_of_permutations: int; number of random permutations to estimate statistical significance (p-values and FDRs)
-    :param title: str;
-    :param random_seed: int | array; random number generator seed (can be set to a user supplied integer for reproducibility)
-    :return: Dataframe; table of genes ranked by Information Coeff vs. phenotype
+    Perform differential analysis on gene expression data of two phenotypes.
     """
-
-    data_df = read_table(gene_expression, header=2, index_col=0)
-    data_df.drop('Description', axis=1, inplace=True)
-    temp = open(phenotypes)
-    temp.readline()
-    temp.readline()
-    classes = [int(i) for i in temp.readline().strip('\n').split(' ')]
-    classes = Series(classes, index=data_df.columns)
-
-    gene_scores = make_match_panel(
-        features=data_df,
-        target=classes,
-        function=ranking_method,
-        target_ascending=False,
-        n_top_features=0.99,
-        max_n_features=max_number_of_genes_to_show,
-        n_samplings=30,
-        n_permutations=number_of_permutations,
-        random_seed=random_seed,
-        target_type='binary',
-        title=title,
-        file_path_prefix=output_filename)
-
-    return gene_scores
 
 
 def match_to_profile(phenotypes,
