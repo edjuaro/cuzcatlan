@@ -251,6 +251,16 @@ def differential_gene_expression(
                      "for reproducibility)"=RANDOM_SEED):
     """
     Perform differential analysis on gene expression data of two phenotypes.
+    :param phenotypes: Series; input binary phenotype/class distinction
+    :param gene_expression: DataFrame; data matrix with input gene expression profiles
+    :param output_filename: str; output files will have this name plus extensions .txt and .pdf
+    :param ranking_method:callable; the function to use to compute similarity between phenotypes and gene_expression.
+    :param phenotypes_row_label: str; Name of phenotype row when input_phenotype is an array
+    :param max_number_of_genes_to_show: int; maximum number of genes to show in the heatmap
+    :param number_of_permutations: int; number of random permutations to estimate statistical significance (p-values and FDRs)
+    :param title: str;
+    :param random_seed: int | array; random number generator seed (can be set to a user supplied integer for reproducibility)
+    :return: DataFrame; table of genes ranked by Information Coeff vs. phenotype
     """
     data_df = pd.read_table(gene_expression, header=2, index_col=0)
     data_df.drop('Description', axis=1, inplace=True)
@@ -284,10 +294,14 @@ def differential_gene_expression(
 
 
 def match_to_profile(
-        phenotypes: "CLS filename; input binary phenotype/class distinction",
         gene_expression: "GCT filename; data matrix with input gene expression profiles",
-        output_filename: "Output files will have this name plus extensions .txt and .pdf",
-        ranking_method: "The function to use to compute similarity between phenotypes and gene_expression",
+        phenotype_input_method: "Select from the dropdown [CLS, Name, or Index] the type of input you have provided",
+        phenotypes_file: "Type the file name of the CLS file where the phenotypes are listed"=None,
+        phenotype_column: "The column name in the GCT file where the gene name is present"=None,
+        name_of_phenotype_to_match: "The row/gene names the phenotype to match"=None,
+        output_filename: "Output files will have this name plus extensions .txt and .pdf"= None,
+        ranking_method: "The function to use to compute similarity between phenotypes and gene_expression"
+                        ="compute_information_coefficient",
         max_number_of_genes_to_show: "Maximum number of genes to show in the heatmap"=20,
         number_of_permutations: "Number of random permutations to estimate statistical significance "
                                 "(p-values and FDRs)"=10,
@@ -296,7 +310,10 @@ def match_to_profile(
                      "for reproducibility)"=RANDOM_SEED):
     """
     Sort genes according to their association with a continuous phenotype or class vector.
-    :param phenotypes: Series; input binary phenotype/class distinction
+    :param phenotypes_file: Series; input binary phenotype/class distinction
+    :param phenotype_column:
+    :param name_of_phenotype_to_match:
+    :param phenotype_input_method:
     :param gene_expression: DataFrame; data matrix with input gene expression profiles
     :param output_filename: str; output files will have this name plus extensions .txt and .pdf
     :param ranking_method:callable; the function to use to compute similarity between phenotypes and gene_expression.
@@ -313,9 +330,36 @@ def match_to_profile(
     # Use phenotypes if both are provided.
     # Check that phenotypes_row_label actually exist in gene_expression DataFrame
 
+    data_df = pd.read_table(gene_expression, header=2, index_col=0)
+    try:
+        data_df.drop('Description', axis=1, inplace=True)
+    except KeyError:
+        pass
+
+    if phenotype_input_method == 'CLS':
+
+        if validators.url(phenotypes_file):
+            urlfile, __ = urllib.request.urlretrieve(phenotypes_file)
+        else:
+            urlfile = phenotypes_file
+
+        temp = open(urlfile)
+        temp.readline()
+        temp.readline()
+        classes = [float(i) for i in temp.readline().strip('\n').split(' ')]
+        classes = pd.Series(classes, index=data_df.columns)
+    elif phenotype_input_method == 'Name':
+        classes = data_df[phenotype_column][name_of_phenotype_to_match]
+    elif phenotype_input_method == 'Index':
+        classes = data_df.loc[name_of_phenotype_to_match]
+
+    # Turn a string into a callable function, if necessary
+    if isinstance(ranking_method, str):
+        ranking_method = eval(ranking_method)
+
     gene_scores = make_match_panel(
-        phenotypes,
-        gene_expression,
+        target=classes,
+        features=data_df,
         # max_n_unique_objects_for_drop_slices=1,
         function=ranking_method,
         target_ascending=False,
@@ -324,7 +368,7 @@ def match_to_profile(
         n_samplings=30,
         n_permutations=number_of_permutations,
         random_seed=random_seed,
-        target_type='binary',
+        target_type='continuous',
         title=title,
         file_path_prefix=output_filename)
 
