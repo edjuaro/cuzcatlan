@@ -12,8 +12,8 @@ from pandas import DataFrame, Series, read_table
 from os import mkdir, remove
 from os.path import abspath, exists, isdir, islink, split, isfile
 from shutil import copy, copytree, rmtree
-from math import ceil
-from matplotlib.pyplot import savefig, figure, subplot, gca, sca, suptitle
+from math import ceil, floor
+from matplotlib.pyplot import savefig, figure, subplot, gca, sca, suptitle, show
 from matplotlib.gridspec import GridSpec
 from matplotlib.cm import Paired, Set3, bwr, tab20, tab20b, tab20c
 from scipy.cluster.hierarchy import dendrogram, linkage
@@ -296,8 +296,8 @@ def differential_gene_expression(
 def match_to_profile(
         gene_expression: "GCT filename; data matrix with input gene expression profiles",
         phenotype_input_method: "Select from the dropdown [CLS, Name, or Index] the type of input you have provided",
-        phenotypes_file: "Type the file name of the CLS file where the phenotypes are listed"=None,
-        phenotype_column: "The column name in the GCT file where the gene name is present"=None,
+        phenotype_file: "Type the file name of the CLS file where the phenotypes are listed"=None,
+        phenotype_column: "The column name in the GCT file where the gene name is present"='Index',
         name_of_phenotype_to_match: "The row/gene names the phenotype to match"=None,
         output_filename: "Output files will have this name plus extensions .txt and .pdf"= None,
         ranking_method: "The function to use to compute similarity between phenotypes and gene_expression"
@@ -305,12 +305,12 @@ def match_to_profile(
         max_number_of_genes_to_show: "Maximum number of genes to show in the heatmap"=20,
         number_of_permutations: "Number of random permutations to estimate statistical significance "
                                 "(p-values and FDRs)"=10,
-        title: "The title of the heatmap"=None,
+        title: "The title of the heatmap"='Differential Expression Results',
         random_seed: "Random number generator seed (can be set to a user supplied integer "
                      "for reproducibility)"=RANDOM_SEED):
     """
     Sort genes according to their association with a continuous phenotype or class vector.
-    :param phenotypes_file: Series; input binary phenotype/class distinction
+    :param phenotype_file: Series; input binary phenotype/class distinction
     :param phenotype_column:
     :param name_of_phenotype_to_match:
     :param phenotype_input_method:
@@ -438,13 +438,10 @@ def make_match_panel(target,
         DataFrame: (n_features, 4 ['Score', '<confidence> MoE', 'p-value',
             'FDR'])
     """
-    print(target.index)
-    print(features.columns)
 
     # Sort target and features.columns (based on target)
     target = target.loc[target.index & features.columns].sort_values(
         ascending=target_ascending or target.dtype == 'O')
-    print(target)
 
     # Drop constant rows
     features = drop_df_slices(
@@ -460,8 +457,6 @@ def make_match_panel(target,
         target = target.map(target_o_to_int)
 
     if target_type in ('binary', 'categorical'):
-
-        print(features.values, target.values)
 
         # Cluster by group
         columns = cluster_2d_array_slices_by_group(
@@ -773,7 +768,7 @@ def permute_target_and_match_target_and_features(target,
 
     seed(random_seed)
     for i in range(n_permutations):
-        if i % ceil(5000 / features.shape[0]) == 0:
+        if i % ceil(n_permutations/10) == 0:
             print('\t{}/{} ...'.format(i + 1, n_permutations))
 
         # Permute
@@ -1103,6 +1098,7 @@ def plot_match_panel(target, target_int_to_o, features, max_std, annotations,
     # Save
     if file_path:
         save_plot(file_path, dpi=dpi)
+    show(target_ax)
 
 
 def save_plot(file_path, overwrite=True, dpi=100):
