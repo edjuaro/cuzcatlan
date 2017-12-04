@@ -239,8 +239,8 @@ def drop_nan_columns(arrays):
 
 
 def differential_gene_expression(
-        phenotypes: "CLS filename; input binary phenotype/class distinction",
         gene_expression: "GCT filename; data matrix with input gene expression profiles",
+        phenotype_file: "CLS filename; input binary phenotype/class distinction",
         output_filename: "Output files will have this name plus extensions .txt and .pdf",
         ranking_method: "The function to use to compute similarity between phenotypes and gene_expression",
         max_number_of_genes_to_show: "Maximum number of genes to show in the heatmap"=20,
@@ -251,7 +251,7 @@ def differential_gene_expression(
                      "for reproducibility)"=RANDOM_SEED):
     """
     Perform differential analysis on gene expression data of two phenotypes.
-    :param phenotypes: Series; input binary phenotype/class distinction
+    :param phenotype_file: Series; input binary phenotype/class distinction
     :param gene_expression: DataFrame; data matrix with input gene expression profiles
     :param output_filename: str; output files will have this name plus extensions .txt and .pdf
     :param ranking_method:callable; the function to use to compute similarity between phenotypes and gene_expression.
@@ -263,12 +263,15 @@ def differential_gene_expression(
     :return: DataFrame; table of genes ranked by Information Coeff vs. phenotype
     """
     data_df = pd.read_table(gene_expression, header=2, index_col=0)
-    data_df.drop('Description', axis=1, inplace=True)
+    try:
+        data_df.drop('Description', axis=1, inplace=True)
+    except KeyError:
+        pass
 
-    if validators.url(phenotypes):
-        urlfile, __ = urllib.request.urlretrieve(phenotypes)
+    if validators.url(phenotype_file):
+        urlfile, __ = urllib.request.urlretrieve(phenotype_file)
     else:
-        urlfile = phenotypes
+        urlfile = phenotype_file
 
     temp = open(urlfile)
     temp.readline()
