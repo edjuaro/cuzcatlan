@@ -32,6 +32,7 @@ mpl.use('Agg')
 import scipy
 import seaborn as sns
 from matplotlib import pyplot as plt
+from matplotlib import gridspec
 from sklearn.cluster import AgglomerativeClustering
 # from time import time
 # import cuzcatlan as cusca
@@ -133,8 +134,8 @@ input_clustering_method = {
 input_row_centering = {
     # These are the values I expect
     'No': None,
-    'Subtract the mean from each row': None,
-    'Subtract the median from each row': None,
+    'Subtract the mean from each row': 'Mean',
+    'Subtract the median from each row': 'Median',
     # These are the values the GpUnit test give
     'None': None,
     'Median': 'Median',
@@ -153,8 +154,8 @@ input_row_normalize = {
 input_col_centering = {
     # These are the values I expect
     'No': None,
-    'Subtract the mean from each column': None,
-    'Subtract the median from each column': None,
+    'Subtract the mean from each column': 'Mean',
+    'Subtract the median from each column': 'Median',
     # These are the values the GpUnit test give
     'None': None,
     'Median': 'Median',
@@ -565,18 +566,25 @@ def parse_inputs(args=sys.argv):
         row_normalization, col_normalization, row_centering, col_centering
 
 
-def plot_dendrogram(model, data, tree, axis, dist=mydist, title='no_title.png', **kwargs):
-    plt.clf()
-    #modified from https://github.com/scikit-learn/scikit-learn/pull/3464/files
+def plot_dendrogram(model, data, tree, axis, dist=mydist, title='no_title.png', col_thresh=0, **kwargs):
+    #     plt.clf()
+
+    # modified from https://github.com/scikit-learn/scikit-learn/pull/3464/files
     # Children of hierarchical clustering
     children = model.children_
     # Distances between each pair of children
-    #TODO: Fix this mydist
+    # TODO: Fix this mydist
     # distance = dendodist(children, euclidian_similarity)
     # distance = dendodist(children, dist)
 
-    # distance = np.cumsum(better_dendodist(children, dist, tree, data, axis=axis))
-    distance = better_dendodist(children, dist, tree, data, axis=axis)
+    og_distances = better_dendodist(children, dist, tree, data, axis=axis)
+    #     print(og_distances)
+    #     og_distances = [abs(temp) for temp in og_distances]
+    #     og_distances = [abs(temp) for temp in og_distances]
+    #     print(og_distances)
+    distance = np.cumsum(og_distances)
+    #     distance = og_distances
+    #     distance = better_dendodist(children, dist, tree, data, axis=axis)
 
     # norm_distances = []
     # for value in distance:
@@ -585,7 +593,7 @@ def plot_dendrogram(model, data, tree, axis, dist=mydist, title='no_title.png', 
 
     list_of_children = list(get_children(tree, leaves_are_self_children=False).values())
     no_of_observations = [len(i) for i in list_of_children if i]
-    no_of_observations.append(len(no_of_observations)+1)
+    no_of_observations.append(len(no_of_observations) + 1)
     # print(len(no_of_observations))
 
     # print(children)
@@ -615,13 +623,17 @@ def plot_dendrogram(model, data, tree, axis, dist=mydist, title='no_title.png', 
     # print(linkage_matrix)
     # Plot the corresponding dendrogram
 
+    #     print(linkage_matrix)
 
-    R = dendrogram(linkage_matrix, color_threshold=0, **kwargs)
-    [label.set_rotation(90) for label in plt.gca().get_xticklabels()]
+
+    R = dendrogram(linkage_matrix, color_threshold=col_thresh, **kwargs)
+    #     R = dendrogram(linkage_matrix, **kwargs)
+    #     [label.set_rotation(90) for label in plt.gca().get_xticklabels()]
     order_of_columns = R['ivl']
     # # print(order_of_columns)
-    # plt.gca().get_yaxis().set_visible(False)
-    # plt.savefig(title, dpi=300)
+    #     plt.gca().get_yaxis().set_visible(False)
+    #     plt.savefig(title, dpi=300)
+    #     plt.show()
 
     # n = len(linkage_matrix) + 1
     # cache = dict()
@@ -631,8 +643,7 @@ def plot_dendrogram(model, data, tree, axis, dist=mydist, title='no_title.png', 
     #     c2 = [c2] if c2 < n else cache.pop(c2)
     #     cache[n + k] = c1 + c2
     # order_of_columns = cache[2 * len(linkage_matrix)]
-
-    return order_of_columns
+    return order_of_columns, linkage_matrix
 
 
 def order_leaves(model, data, tree, labels, axis=0, dist=mydist, reverse = False):
@@ -1067,6 +1078,7 @@ def make_atr(col_tree_dic, data, dist, clustering_method='average', file_name='t
     for node, children in col_tree_dic.items():
         val = centroid_distances(children[0], children[1], tree=col_tree_dic, data=data, axis=1,
                                  distance=dist, clustering_method=clustering_method)
+        # print(dist, children, val)
         # print("Value is", val)
         distance_dic[node] = val
 
@@ -1265,12 +1277,13 @@ def better_dendodist(children, distance, tree, data, axis):
     distances_list = []
     for pair in children:
         distances_list.append(centroid_distances(pair[0], pair[1], tree, data, axis, distance=distance))
+        # print(distance, pair, distances_list[-1])
     return distances_list
 
 
 def HierarchicalClustering(pwd, gct_name, col_distance_metric, output_distances, row_distance_metric,
                            clustering_method, output_base_name, row_normalization, col_normalization,
-                           row_centering, col_centering):
+                           row_centering, col_centering, custom_plot=False):
     # gct_name, col_distance_metric, output_distances, row_distance_metric, clustering_method, output_base_name, \
     # row_normalization, col_normalization, row_centering, col_centering = parse_inputs(sys.argv)
 
@@ -1285,7 +1298,12 @@ def HierarchicalClustering(pwd, gct_name, col_distance_metric, output_distances,
     # print(data_df)
 
     atr_companion = False
+    col_model = None
+    col_tree = None
+
     gtr_companion = False
+    row_model = None
+    row_tree = None
 
     AID = None
     GID = None
@@ -1332,4 +1350,35 @@ def HierarchicalClustering(pwd, gct_name, col_distance_metric, output_distances,
     make_cdt(data=new_full_gct, name=output_base_name + '.cdt', atr_companion=atr_companion,
              gtr_companion=gtr_companion,
              order_of_columns=order_of_columns, order_of_rows=order_of_rows)
-    return
+
+    if custom_plot:
+        # Plotting the heatmap with dendrogram
+
+        plt.clf()
+        # fig = plt.figure(figsize=(16, 9), dpi=300)
+        fig = plt.figure(figsize=(16, 9))
+        gs = gridspec.GridSpec(2, 1, height_ratios=[1, 5])
+        gs.update(wspace=0.0, hspace=0.0)
+        ax0 = plt.subplot(gs[0])  # Doing dendrogram first
+        ax0.axis('off')
+
+        col_order, link = plot_dendrogram(col_model, data, col_tree, axis=1, dist=custom_pearson_corr, col_thresh=15,
+                                          title='no_title.png')
+        col_order = [int(i) for i in col_order]
+
+        # print(col_order)
+        named_col_order = [col_labels[i] for i in col_order]
+        # print(named_col_order)
+
+        ax1 = plt.subplot(gs[1])
+
+        #Row-normalizing for display purposes only:
+        data_df = data_df.subtract(data_df.min(axis=1), axis=0)
+        data_df = data_df.div(data_df.max(axis=1), axis=0)
+
+        sns.heatmap(data_df[named_col_order], ax=ax1, cbar=False, cmap='bwr')
+        # ax1.xaxis.tick_top()
+        [label.set_rotation(90) for label in ax1.get_xticklabels()]
+        plt.show()
+
+    return col_model, row_model
