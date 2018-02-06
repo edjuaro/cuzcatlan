@@ -1382,3 +1382,58 @@ def HierarchicalClustering(pwd, gct_name, col_distance_metric, output_distances,
         plt.show()
 
     return col_model, row_model
+
+
+def oc_hc_samples(input_gene_expression, clustering_type, distance_metric):
+    print("Currenty clustering_type is being ignored, only single is supported.")
+    pwd = '.'
+    gct_name = input_gene_expression
+    col_distance_metric = distance_metric
+    output_distances = False
+    row_distance_metric = 'No_row_clustering'
+    clustering_method = 'average'
+    output_base_name = 'OC_HC'
+    row_normalization = False
+    col_normalization = False
+    row_centering = 'Mean'
+    col_centering = 'Mean'
+
+    print("This are the parameters to be used (for debugging purposes)")
+    print("""
+    pwd = '.'
+    gct_name = {gct_name}
+    col_distance_metric = {col_distance_metric}
+    output_distances = {output_distances}
+    row_distance_metric = {row_distance_metric}
+    clustering_method = {clustering_method}
+    output_base_name = {output_base_name}
+    row_normalization = {row_normalization}
+    col_normalization = {col_normalization}
+    row_centering = {row_centering}
+    col_centering = {col_centering}
+    """.format(
+        gct_name=gct_name, col_distance_metric=col_distance_metric,
+        output_distances=str(output_distances),
+        row_distance_metric=row_distance_metric, clustering_method=clustering_method,
+        output_base_name=output_base_name,
+        row_normalization=str(row_normalization), col_normalization=str(col_normalization),
+        row_centering=row_centering, col_centering=col_centering
+    )
+    )
+    print("Now we will start performing hierarchical clustering, this may take a little while.")
+    col_model, row_model = HierarchicalClustering(pwd,
+                                                  gct_name,
+                                                  col_distance_metric,
+                                                  output_distances,
+                                                  row_distance_metric,
+                                                  clustering_method,
+                                                  output_base_name,
+                                                  row_normalization,
+                                                  col_normalization,
+                                                  row_centering,
+                                                  col_centering)
+    print("Done with Hierarchical Clustering!")
+    print("Now we are crafting the dendrogram...")
+    print(col_model)
+
+    return col_model

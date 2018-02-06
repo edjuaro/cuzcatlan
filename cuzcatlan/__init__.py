@@ -1,3 +1,3 @@
 from .elemental import *
 from .information import *
-from .clustering import HierarchicalClustering
+from .clustering import *
