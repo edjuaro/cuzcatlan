@@ -647,9 +647,8 @@ def plot_dendrogram(model, data, tree, axis, dist=mydist, clustering_method='ave
             color_threshold = 2
         if color_threshold > (len(linkage_matrix)+1):
             color_threshold = (len(linkage_matrix)+1)
-        print('Finding the right cut')
+        # print('Finding the right cut')
         color_threshold = linkage_matrix[-(color_threshold-1)][2] - np.finfo(float).eps
-        exit("stop")
 
     R = dendrogram(linkage_matrix, color_threshold=color_threshold, **kwargs)
     #     R = dendrogram(linkage_matrix, **kwargs)
