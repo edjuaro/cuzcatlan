@@ -35,35 +35,42 @@ def custom_pearson_corr(x, y):
 
 
 def custom_pearson_dist(x, y):
-    # [-1,1]
+    # [0,2]
     return 1 - scipy.stats.pearsonr(x, y)[0]
 
 
 def custom_spearman_corr(x, y):
+    # [-1,1]
     return scipy.stats.spearmanr(x, y)[0]
 
 
 def custom_spearman_dist(x, y):
+    # [0,2]
     return 1 - scipy.stats.spearmanr(x, y)[0]
 
 
 def absolute_spearman(x, y):
+    # [0,1]
     return abs(scipy.stats.spearmanr(x, y)[0])
 
 
 def custom_kendall_tau_corr(x, y):
+    # [-1,1]
     return scipy.stats.kendalltau(x, y)[0]
 
 
 def custom_kendall_tau_dist(x, y):
+    # [0,2]
     return 1 - scipy.stats.kendalltau(x, y)[0]
 
 
 def absolute_pearson_corr(x, y):
+    # [0,1]
     return np.abs(scipy.stats.pearsonr(x, y)[0])
 
 
 def absolute_pearson_dist(x, y):
+    # [-1,0]
     return 1 - np.abs(scipy.stats.pearsonr(x, y)[0])
 
 
@@ -96,6 +103,7 @@ def uncentered_pearson_dist(x, y):
 
 
 def absolute_uncentered_pearson_corr(x, y):
+    # [0,1]
     if len(x) != len(y):
         # Uncentered Pearson Correlation cannot be computed for vectors of different length.
         print('Uncentered Pearson Correlation cannot be computed for vectors of different length.')
@@ -107,6 +115,7 @@ def absolute_uncentered_pearson_corr(x, y):
 
 
 def absolute_uncentered_pearson_dist(x, y):
+    # [-1,0]
     if len(x) != len(y):
         # Uncentered Pearson Correlation cannot be computed for vectors of different length.
         print('Uncentered Pearson Correlation cannot be computed for vectors of different length.')
@@ -118,16 +127,19 @@ def absolute_uncentered_pearson_dist(x, y):
 
 
 def mydist(p1, p2):
+    # [0,inf)
     # a custom function that just computes Euclidean distance
     diff = p1 - p2
     return np.vdot(diff, diff) ** 0.5
 
 
 def custom_euclidean_dist(x, y):
+    # [0,inf)
     return scipy.spatial.distance.euclidean(x, y)
 
 
 def custom_euclidean_sim(x, y):
+    # (0,1]
     return 1/(1+scipy.spatial.distance.euclidean(x, y))
 
 
@@ -137,18 +149,22 @@ def dendodist(V, dist=mydist):
 
 
 def custom_manhattan_dist(x, y):
+    # [0,inf)
     return scipy.spatial.distance.cityblock(x, y)
 
 
 def custom_manhattan_sim(x, y):
+    # (0,1]
     return 1/(1+scipy.spatial.distance.cityblock(x, y))
 
 
 def custom_cosine_dist(x, y):
+    # [0,2]
     return scipy.spatial.distance.cosine(x, y)
 
 
 def custom_cosine_sim(x, y):
+    # [-1,1]
     return 1-scipy.spatial.distance.cosine(x, y)
 
 

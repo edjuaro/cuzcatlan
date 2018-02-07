@@ -1,7 +1,7 @@
 from setuptools import setup
 
 setup(name='cuzcatlan',
-      version='0.4.2',
+      version='0.5.0',
       description="Edwin Juarez's support library for GenePattern.",
       url='https://github.com/edjuaro/cuzcatlan',
       author='Edwin F. Juarez',
@@ -17,5 +17,6 @@ setup(name='cuzcatlan',
             'statsmodels',
             'seaborn',
             'validators',
+            'IPython',
             ],
       )

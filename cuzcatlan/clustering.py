@@ -25,8 +25,14 @@ import os
 import sys
 tasklib_path = os.path.dirname(os.path.realpath(sys.argv[0]))
 # sys.path.append(tasklib_path + "/ccalnoir")
-import matplotlib as mpl
-mpl.use('Agg')
+
+# 2018-02-06 Maybe uncomment these next two
+# import matplotlib as mpl
+# mpl.use('Agg')
+
+# This is forprinting the hyperlink
+from IPython.core.display import display, HTML
+
 # import pandas as pd
 # import numpy as np
 import scipy
@@ -566,7 +572,8 @@ def parse_inputs(args=sys.argv):
         row_normalization, col_normalization, row_centering, col_centering
 
 
-def plot_dendrogram(model, data, tree, axis, dist=mydist, title='no_title.png', col_thresh=0, **kwargs):
+def plot_dendrogram(model, data, tree, axis, dist=mydist, clustering_method='average',
+                    title='no_title.png', col_thresh=None, **kwargs):
     #     plt.clf()
 
     # modified from https://github.com/scikit-learn/scikit-learn/pull/3464/files
@@ -577,10 +584,21 @@ def plot_dendrogram(model, data, tree, axis, dist=mydist, title='no_title.png', 
     # distance = dendodist(children, euclidian_similarity)
     # distance = dendodist(children, dist)
 
-    og_distances = better_dendodist(children, dist, tree, data, axis=axis)
+    og_distances = better_dendodist(children, dist, tree, data, axis=axis, clustering_method=clustering_method)
     #     print(og_distances)
     #     og_distances = [abs(temp) for temp in og_distances]
-    #     og_distances = [abs(temp) for temp in og_distances]
+
+    # Turn similarity into non-negative value Scipy's dendrogram needs this
+    if dist in [custom_euclidean_sim, absolute_uncentered_pearson_corr, absolute_pearson_corr]:
+        # These similarities are already nonnegative [0,inf) or [0,1]
+        # og_distances = og_distances
+        pass
+    else:  # all the correlation similarities [-1,-1]
+        og_distances = [temp+1 for temp in og_distances]
+
+    # Now that all similarities are nonnegative, we turn them into a distance for plotting purposes
+    og_distances = [1/temp for temp in og_distances]
+
     #     print(og_distances)
     distance = np.cumsum(og_distances)
     #     distance = og_distances
@@ -1273,17 +1291,18 @@ def euclidian_similarity(x, y):
     return 1/(np.exp(dist))
 
 
-def better_dendodist(children, distance, tree, data, axis):
+def better_dendodist(children, distance, tree, data, axis, clustering_method='average'):
     distances_list = []
     for pair in children:
-        distances_list.append(centroid_distances(pair[0], pair[1], tree, data, axis, distance=distance))
+        distances_list.append(centroid_distances(pair[0], pair[1], tree, data, axis, distance=distance,
+                                                 clustering_method=clustering_method))
         # print(distance, pair, distances_list[-1])
     return distances_list
 
 
 def HierarchicalClustering(pwd, gct_name, col_distance_metric, output_distances, row_distance_metric,
                            clustering_method, output_base_name, row_normalization, col_normalization,
-                           row_centering, col_centering, custom_plot=False):
+                           row_centering, col_centering, custom_plot=None):
     # gct_name, col_distance_metric, output_distances, row_distance_metric, clustering_method, output_base_name, \
     # row_normalization, col_normalization, row_centering, col_centering = parse_inputs(sys.argv)
 
@@ -1318,7 +1337,8 @@ def HierarchicalClustering(pwd, gct_name, col_distance_metric, output_distances,
         order_of_columns = order_leaves(col_model, tree=col_tree, data=data_transpose,
                                         dist=str2similarity[col_distance_metric], labels=col_labels, reverse=True)
 
-        make_atr(col_tree, file_name=output_base_name + '.atr', data=data,
+        path_to_atr = output_base_name + '.atr'
+        make_atr(col_tree, file_name=path_to_atr, data=data,
                  dist=str2similarity[col_distance_metric], clustering_method=linkage_dic[clustering_method])
 
     if row_distance_metric != 'No_row_clustering':
@@ -1347,13 +1367,13 @@ def HierarchicalClustering(pwd, gct_name, col_distance_metric, output_distances,
             dist_file.write('distances row=' + str(i) + "," + ",".join(row.astype(str)) + "\n")
             i += 1
 
-    make_cdt(data=new_full_gct, name=output_base_name + '.cdt', atr_companion=atr_companion,
+    path_to_cdt = output_base_name + '.cdt'
+    make_cdt(data=new_full_gct, name=path_to_cdt, atr_companion=atr_companion,
              gtr_companion=gtr_companion,
              order_of_columns=order_of_columns, order_of_rows=order_of_rows)
 
-    if custom_plot:
+    if custom_plot == 'Samples':
         # Plotting the heatmap with dendrogram
-
         plt.clf()
         # fig = plt.figure(figsize=(16, 9), dpi=300)
         fig = plt.figure(figsize=(16, 9))
@@ -1362,8 +1382,8 @@ def HierarchicalClustering(pwd, gct_name, col_distance_metric, output_distances,
         ax0 = plt.subplot(gs[0])  # Doing dendrogram first
         ax0.axis('off')
 
-        col_order, link = plot_dendrogram(col_model, data, col_tree, axis=1, dist=custom_pearson_corr, col_thresh=15,
-                                          title='no_title.png')
+        col_order, link = plot_dendrogram(col_model, data, col_tree, axis=1, dist=str2similarity[col_distance_metric],
+                                          clustering_method=clustering_method, col_thresh=None, title='no_title.png')
         col_order = [int(i) for i in col_order]
 
         # print(col_order)
@@ -1379,12 +1399,26 @@ def HierarchicalClustering(pwd, gct_name, col_distance_metric, output_distances,
         sns.heatmap(data_df[named_col_order], ax=ax1, cbar=False, cmap='bwr')
         # ax1.xaxis.tick_top()
         [label.set_rotation(90) for label in ax1.get_xticklabels()]
+        file_path_plot = output_base_name + '.pdf'
+        plt.savefig(file_path_plot)
+
+        print("----------------------------------------------------------------------")
+        print("The PDF of this heatmap can be downloaded here:")
+        display(HTML('<a href="' + file_path_plot + '" target="_blank">PDF of the heatmap</a>'))
+        print("----------------------------------------------------------------------")
+        print("The CDF which is compatible with HierarchicalClusteringViewer is here:")
+        display(HTML('<a href="' + path_to_cdt + '" target="_blank">TXT containing the output data</a>'))
+        print("----------------------------------------------------------------------")
+        print("The ATR which is compatible with HierarchicalClusteringViewer is here:")
+        display(HTML('<a href="' + path_to_atr + '" target="_blank">TXT containing the output data</a>'))
+        print("----------------------------------------------------------------------")
+
         plt.show()
 
     return col_model, row_model
 
 
-def oc_hc_samples(input_gene_expression, clustering_type, distance_metric):
+def hc_samples(input_gene_expression, clustering_type, distance_metric, file_basename='HC_out'):
     print("Currenty clustering_type is being ignored, only single is supported.")
     pwd = '.'
     gct_name = input_gene_expression
@@ -1392,11 +1426,12 @@ def oc_hc_samples(input_gene_expression, clustering_type, distance_metric):
     output_distances = False
     row_distance_metric = 'No_row_clustering'
     clustering_method = 'average'
-    output_base_name = 'OC_HC'
+    output_base_name = file_basename
     row_normalization = False
     col_normalization = False
     row_centering = 'Mean'
     col_centering = 'Mean'
+    custom_plot = 'Samples'
 
     print("This are the parameters to be used (for debugging purposes)")
     print("""
@@ -1421,6 +1456,7 @@ def oc_hc_samples(input_gene_expression, clustering_type, distance_metric):
     )
     )
     print("Now we will start performing hierarchical clustering, this may take a little while.")
+
     col_model, row_model = HierarchicalClustering(pwd,
                                                   gct_name,
                                                   col_distance_metric,
@@ -1431,9 +1467,8 @@ def oc_hc_samples(input_gene_expression, clustering_type, distance_metric):
                                                   row_normalization,
                                                   col_normalization,
                                                   row_centering,
-                                                  col_centering)
+                                                  col_centering,
+                                                  custom_plot)
     print("Done with Hierarchical Clustering!")
-    print("Now we are crafting the dendrogram...")
-    print(col_model)
 
     return col_model
