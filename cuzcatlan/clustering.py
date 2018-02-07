@@ -573,7 +573,7 @@ def parse_inputs(args=sys.argv):
 
 
 def plot_dendrogram(model, data, tree, axis, dist=mydist, clustering_method='average',
-                    title='no_title.png', col_thresh=None, **kwargs):
+                    title='no_title.png', color_threshold=None, **kwargs):
     #     plt.clf()
 
     # modified from https://github.com/scikit-learn/scikit-learn/pull/3464/files
@@ -641,10 +641,17 @@ def plot_dendrogram(model, data, tree, axis, dist=mydist, clustering_method='ave
     # print(linkage_matrix)
     # Plot the corresponding dendrogram
 
-    #     print(linkage_matrix)
+    # find what the height at which to cut the dendrogram
+    if color_threshold is not None:
+        if color_threshold == 1:
+            color_threshold = 2
+        if color_threshold > (len(linkage_matrix)+1):
+            color_threshold = (len(linkage_matrix)+1)
+        print('Finding the right cut')
+        color_threshold = linkage_matrix[-(color_threshold-1)][2] - np.finfo(float).eps
+        exit("stop")
 
-
-    R = dendrogram(linkage_matrix, color_threshold=col_thresh, **kwargs)
+    R = dendrogram(linkage_matrix, color_threshold=color_threshold, **kwargs)
     #     R = dendrogram(linkage_matrix, **kwargs)
     #     [label.set_rotation(90) for label in plt.gca().get_xticklabels()]
     order_of_columns = R['ivl']
@@ -842,9 +849,14 @@ def plot_heatmap(df, col_order, row_order, top=5, title_text='differentially exp
 
 
 def parse_data(gct_name, row_normalization=False, col_normalization=False, row_centering=None, col_centering=None):
-    f = open(gct_name)
-    f.readline()
-    size = f.readline().strip('\n').split('\t')
+
+    # if validators.url(gct_name):
+    #     urlfile, __ = urllib.request.urlretrieve(gct_name)
+    # else:
+    #     urlfile = gct_name
+    # f = open(urlfile)
+    # f.readline()
+    # size = f.readline().strip('\n').split('\t')
 
     data_df = pd.read_csv(gct_name, sep='\t', skiprows=2)
     # print(size)
@@ -1302,7 +1314,7 @@ def better_dendodist(children, distance, tree, data, axis, clustering_method='av
 
 def HierarchicalClustering(pwd, gct_name, col_distance_metric, output_distances, row_distance_metric,
                            clustering_method, output_base_name, row_normalization, col_normalization,
-                           row_centering, col_centering, custom_plot=None):
+                           row_centering, col_centering, custom_plot=None, clusters_to_highlight=None):
     # gct_name, col_distance_metric, output_distances, row_distance_metric, clustering_method, output_base_name, \
     # row_normalization, col_normalization, row_centering, col_centering = parse_inputs(sys.argv)
 
@@ -1383,7 +1395,7 @@ def HierarchicalClustering(pwd, gct_name, col_distance_metric, output_distances,
         ax0.axis('off')
 
         col_order, link = plot_dendrogram(col_model, data, col_tree, axis=1, dist=str2similarity[col_distance_metric],
-                                          clustering_method=clustering_method, col_thresh=None, title='no_title.png')
+                                          clustering_method=clustering_method, color_threshold=clusters_to_highlight, title='no_title.png')
         col_order = [int(i) for i in col_order]
 
         # print(col_order)
@@ -1418,7 +1430,8 @@ def HierarchicalClustering(pwd, gct_name, col_distance_metric, output_distances,
     return col_model, row_model
 
 
-def hc_samples(input_gene_expression, clustering_type, distance_metric, file_basename='HC_out'):
+def hc_samples(input_gene_expression, clustering_type, distance_metric,
+               file_basename='HC_out', clusters_to_highlight=None):
     print("Currenty clustering_type is being ignored, only single is supported.")
     pwd = '.'
     gct_name = input_gene_expression
@@ -1433,28 +1446,28 @@ def hc_samples(input_gene_expression, clustering_type, distance_metric, file_bas
     col_centering = 'Mean'
     custom_plot = 'Samples'
 
-    print("This are the parameters to be used (for debugging purposes)")
-    print("""
-    pwd = '.'
-    gct_name = {gct_name}
-    col_distance_metric = {col_distance_metric}
-    output_distances = {output_distances}
-    row_distance_metric = {row_distance_metric}
-    clustering_method = {clustering_method}
-    output_base_name = {output_base_name}
-    row_normalization = {row_normalization}
-    col_normalization = {col_normalization}
-    row_centering = {row_centering}
-    col_centering = {col_centering}
-    """.format(
-        gct_name=gct_name, col_distance_metric=col_distance_metric,
-        output_distances=str(output_distances),
-        row_distance_metric=row_distance_metric, clustering_method=clustering_method,
-        output_base_name=output_base_name,
-        row_normalization=str(row_normalization), col_normalization=str(col_normalization),
-        row_centering=row_centering, col_centering=col_centering
-    )
-    )
+    # print("This are the parameters to be used (for debugging purposes)")
+    # print("""
+    # pwd = '.'
+    # gct_name = {gct_name}
+    # col_distance_metric = {col_distance_metric}
+    # output_distances = {output_distances}
+    # row_distance_metric = {row_distance_metric}
+    # clustering_method = {clustering_method}
+    # output_base_name = {output_base_name}
+    # row_normalization = {row_normalization}
+    # col_normalization = {col_normalization}
+    # row_centering = {row_centering}
+    # col_centering = {col_centering}
+    # """.format(
+    #     gct_name=gct_name, col_distance_metric=col_distance_metric,
+    #     output_distances=str(output_distances),
+    #     row_distance_metric=row_distance_metric, clustering_method=clustering_method,
+    #     output_base_name=output_base_name,
+    #     row_normalization=str(row_normalization), col_normalization=str(col_normalization),
+    #     row_centering=row_centering, col_centering=col_centering
+    # )
+    # )
     print("Now we will start performing hierarchical clustering, this may take a little while.")
 
     col_model, row_model = HierarchicalClustering(pwd,
@@ -1468,7 +1481,8 @@ def hc_samples(input_gene_expression, clustering_type, distance_metric, file_bas
                                                   col_normalization,
                                                   row_centering,
                                                   col_centering,
-                                                  custom_plot)
+                                                  custom_plot,
+                                                  clusters_to_highlight)
     print("Done with Hierarchical Clustering!")
 
     return col_model
