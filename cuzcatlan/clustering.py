@@ -1429,9 +1429,27 @@ def HierarchicalClustering(pwd, gct_name, col_distance_metric, output_distances,
     return col_model, row_model
 
 
-def hc_samples(input_gene_expression, clustering_type, distance_metric,
-               file_basename='HC_out', clusters_to_highlight=None):
-    print("Currenty clustering_type is being ignored, only single is supported.")
+def hc_samples(
+        input_gene_expression: "gene expression data filename (.gct file) where rows are genes and columns are samples",
+        clustering_type: "single or consensus -- Only single is suported at the moment",
+        distance_metric: "the function to be used when comparing the distance/similarity of the columns in the "
+                         "input_gene_expression dataset",
+        file_basename: "the name to use when naming output files"='HC_out',
+        clusters_to_highlight: "how many clusters to highlight in the dendrogram"=None):
+
+    """
+    Perform hierarchical clustering to group samples with similar phenotypes.
+    :param input_gene_expression: str; gene expression data filename (.gct file)
+    where rows are genes and columns are samples
+    :param clustering_type: str; single or consensus
+    :param distance_metric: str; the function to be used when comparing the distance/similarity of the columns
+    in the input_gene_expression dataset
+    :param file_basename: str; the name to use when naming output files
+    :param clusters_to_highlight: int; how many clusters to highlight in the dendrogram
+    :return: object; Sklearn's AgglomerativeClustering fitted model
+    """
+
+    print("Currenty clustering_type is being ignored, only 'single' is supported.")
     pwd = '.'
     gct_name = input_gene_expression
     col_distance_metric = distance_metric
