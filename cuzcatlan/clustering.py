@@ -573,7 +573,8 @@ def parse_inputs(args=sys.argv):
 
 
 def plot_dendrogram(model, data, tree, axis, dist=mydist, clustering_method='average',
-                    title='no_title.png', color_threshold=None, **kwargs):
+                    title='no_title.png', color_threshold=None, orientation='top', **kwargs):
+
     #     plt.clf()
 
     # modified from https://github.com/scikit-learn/scikit-learn/pull/3464/files
@@ -650,7 +651,7 @@ def plot_dendrogram(model, data, tree, axis, dist=mydist, clustering_method='ave
         # print('Finding the right cut')
         color_threshold = linkage_matrix[-(color_threshold-1)][2] - np.finfo(float).eps
 
-    R = dendrogram(linkage_matrix, color_threshold=color_threshold, **kwargs)
+    R = dendrogram(linkage_matrix, color_threshold=color_threshold, orientation=orientation, **kwargs)
     #     R = dendrogram(linkage_matrix, **kwargs)
     #     [label.set_rotation(90) for label in plt.gca().get_xticklabels()]
     order_of_columns = R['ivl']
@@ -1072,7 +1073,11 @@ def make_cdt(data, order_of_columns, order_of_rows, name='test.cdt', atr_compani
 
         # reorder to match dendogram
         temp = ['AID', 'EWEIGHT'] + order_of_rows
-        data = data.loc[temp]
+        # data = data.loc[temp]
+        # print(data['GID'])
+        data = data.reindex(temp)
+        # print(data['GID'])
+
         # print(list(data.index))
         # print(data['GID'])
         # print(data['Name'])
@@ -1362,6 +1367,7 @@ def HierarchicalClustering(pwd, gct_name, col_distance_metric, output_distances,
         row_tree = make_tree(row_model)
         order_of_rows = order_leaves(row_model, tree=row_tree, data=data,
                                      dist=str2similarity[row_distance_metric], labels=row_labels)
+        path_to_gtr = output_base_name + '.gtr'
         make_gtr(row_tree, data=data, file_name=output_base_name + '.gtr', dist=str2similarity[row_distance_metric])
 
     if output_distances:
@@ -1394,7 +1400,8 @@ def HierarchicalClustering(pwd, gct_name, col_distance_metric, output_distances,
         ax0.axis('off')
 
         col_order, link = plot_dendrogram(col_model, data, col_tree, axis=1, dist=str2similarity[col_distance_metric],
-                                          clustering_method=clustering_method, color_threshold=clusters_to_highlight, title='no_title.png')
+                                          clustering_method=clustering_method, color_threshold=clusters_to_highlight,
+                                          title='no_title.png', orientation='top')
         col_order = [int(i) for i in col_order]
 
         # print(col_order)
@@ -1411,7 +1418,7 @@ def HierarchicalClustering(pwd, gct_name, col_distance_metric, output_distances,
         # ax1.xaxis.tick_top()
         [label.set_rotation(90) for label in ax1.get_xticklabels()]
         file_path_plot = output_base_name + '.pdf'
-        plt.savefig(file_path_plot)
+        plt.savefig(file_path_plot, bbox_inches='tight')
 
         print("----------------------------------------------------------------------")
         print("The PDF of this heatmap can be downloaded here:")
@@ -1424,10 +1431,259 @@ def HierarchicalClustering(pwd, gct_name, col_distance_metric, output_distances,
         display(HTML('<a href="' + path_to_atr + '" target="_blank">TXT containing the output data</a>'))
         print("----------------------------------------------------------------------")
 
-        plt.show()
+        # plt.show()
+
+    if custom_plot == 'Genes':
+        # Plotting the heatmap with dendrogram
+        plt.clf()
+        # fig = plt.figure(figsize=(16, 9), dpi=300)
+        fig = plt.figure(figsize=(16, 9))
+        gs = gridspec.GridSpec(1, 2, width_ratios=[5, 1])
+        gs.update(wspace=0.0, hspace=0.0)
+        ax0 = plt.subplot(gs[1])  # Doing dendrogram first
+        ax0.axis('off')
+
+        row_order, link = plot_dendrogram(row_model, data_transpose, row_tree, axis=1,
+                                          dist=str2similarity[row_distance_metric],
+                                          clustering_method=clustering_method,
+                                          color_threshold=clusters_to_highlight,
+                                          orientation='right',
+                                          title='no_title.png')
+        # row_order = [int(i) for i in row_order]
+
+        # named_row_order = [row_labels[i] for i in row_order]
+
+        ax1 = plt.subplot(gs[0])
+
+        #Row-normalizing for display purposes only:
+        data_df = data_df.subtract(data_df.min(axis=1), axis=0)
+        data_df = data_df.div(data_df.max(axis=1), axis=0)
+
+        sns.heatmap(data_df.iloc[row_order], ax=ax1, cbar=False, cmap='bwr')
+        # ax1.xaxis.tick_top()
+        [label.set_rotation(90) for label in ax1.get_xticklabels()]
+        file_path_plot = output_base_name + '.pdf'
+        plt.savefig(file_path_plot, bbox_inches='tight')
+
+        print("----------------------------------------------------------------------")
+        print("The PDF of this heatmap can be downloaded here:")
+        display(HTML('<a href="' + file_path_plot + '" target="_blank">PDF of the heatmap</a>'))
+        print("----------------------------------------------------------------------")
+        print("The CDF which is compatible with HierarchicalClusteringViewer is here:")
+        display(HTML('<a href="' + path_to_cdt + '" target="_blank">TXT containing the output data</a>'))
+        print("----------------------------------------------------------------------")
+        print("The GTR which is compatible with HierarchicalClusteringViewer is here:")
+        display(HTML('<a href="' + path_to_gtr + '" target="_blank">TXT containing the output data</a>'))
+        print("----------------------------------------------------------------------")
+
+        # plt.show()
+
+    if custom_plot == 'Both':
+        # Plotting the heatmap with dendrogram
+        plt.clf()
+        # fig = plt.figure(figsize=(16, 9), dpi=300)
+        fig = plt.figure(figsize=(16, 9))
+        gs = gridspec.GridSpec(2, 2, width_ratios=[5, 1], height_ratios=[1, 5])
+        gs.update(wspace=0.0, hspace=0.0)
+
+        # Doing TOP dendrogram first
+        ax0 = plt.subplot(gs[0])
+        ax0.axis('off')
+
+        col_order, link = plot_dendrogram(col_model, data, col_tree, axis=1, dist=str2similarity[col_distance_metric],
+                                          clustering_method=clustering_method, color_threshold=clusters_to_highlight,
+                                          title='no_title.png', orientation='top')
+        col_order = [int(i) for i in col_order]
+        named_col_order = [col_labels[i] for i in col_order]
+
+        # Doing RIGHT dendrogram
+        ax3 = plt.subplot(gs[3])
+        ax3.axis('off')
+
+        row_order, link = plot_dendrogram(row_model, data_transpose, row_tree, axis=1,
+                                          dist=str2similarity[row_distance_metric],
+                                          clustering_method=clustering_method,
+                                          color_threshold=clusters_to_highlight,
+                                          orientation='right',
+                                          title='no_title.png')
+
+        # Plotting the heatmap now
+        ax1 = plt.subplot(gs[2])
+
+        #Row-normalizing for display purposes only:
+        data_df = data_df.subtract(data_df.min(axis=1), axis=0)
+        data_df = data_df.div(data_df.max(axis=1), axis=0)
+
+        sns.heatmap(data_df[named_col_order].iloc[row_order], ax=ax1, cbar=False, cmap='bwr')
+        # ax1.xaxis.tick_top()
+        [label.set_rotation(90) for label in ax1.get_xticklabels()]
+        file_path_plot = output_base_name + '.pdf'
+        plt.savefig(file_path_plot, bbox_inches='tight')
+
+        print("----------------------------------------------------------------------")
+        print("The PDF of this heatmap can be downloaded here:")
+        display(HTML('<a href="' + file_path_plot + '" target="_blank">PDF of the heatmap</a>'))
+        print("----------------------------------------------------------------------")
+        print("The CDF which is compatible with HierarchicalClusteringViewer is here:")
+        display(HTML('<a href="' + path_to_cdt + '" target="_blank">TXT containing the output data</a>'))
+        print("----------------------------------------------------------------------")
+        print("The GTR which is compatible with HierarchicalClusteringViewer is here:")
+        display(HTML('<a href="' + path_to_gtr + '" target="_blank">TXT containing the output data</a>'))
+        print("----------------------------------------------------------------------")
 
     return col_model, row_model
 
+
+def hc_samples(
+        input_gene_expression: "gene expression data filename (.gct file) where rows are genes and columns are samples",
+        clustering_type: "single or consensus -- Only single is suported at the moment",
+        distance_metric: "the function to be used when comparing the distance/similarity of the columns in the "
+                         "input_gene_expression dataset",
+        file_basename: "the name to use when naming output files"='HC_out',
+        clusters_to_highlight: "how many clusters to highlight in the dendrogram"=None):
+
+    """
+    Perform hierarchical clustering to group samples with similar phenotypes.
+    :param input_gene_expression: str; gene expression data filename (.gct file)
+    where rows are genes and columns are samples
+    :param clustering_type: str; single or consensus
+    :param distance_metric: str; the function to be used when comparing the distance/similarity of the columns
+    in the input_gene_expression dataset
+    :param file_basename: str; the name to use when naming output files
+    :param clusters_to_highlight: int; how many clusters to highlight in the dendrogram
+    :return: object; Sklearn's AgglomerativeClustering fitted model
+    """
+
+    print("Currenty clustering_type is being ignored, only 'single' is supported.")
+    pwd = '.'
+    gct_name = input_gene_expression
+    col_distance_metric = distance_metric
+    output_distances = False
+    row_distance_metric = 'No_row_clustering'
+    clustering_method = 'average'
+    output_base_name = file_basename
+    row_normalization = False
+    col_normalization = False
+    row_centering = 'Mean'
+    col_centering = 'Mean'
+    custom_plot = 'Samples'
+
+    # print("This are the parameters to be used (for debugging purposes)")
+    # print("""
+    # pwd = '.'
+    # gct_name = {gct_name}
+    # col_distance_metric = {col_distance_metric}
+    # output_distances = {output_distances}
+    # row_distance_metric = {row_distance_metric}
+    # clustering_method = {clustering_method}
+    # output_base_name = {output_base_name}
+    # row_normalization = {row_normalization}
+    # col_normalization = {col_normalization}
+    # row_centering = {row_centering}
+    # col_centering = {col_centering}
+    # """.format(
+    #     gct_name=gct_name, col_distance_metric=col_distance_metric,
+    #     output_distances=str(output_distances),
+    #     row_distance_metric=row_distance_metric, clustering_method=clustering_method,
+    #     output_base_name=output_base_name,
+    #     row_normalization=str(row_normalization), col_normalization=str(col_normalization),
+    #     row_centering=row_centering, col_centering=col_centering
+    # )
+    # )
+    print("Now we will start performing hierarchical clustering, this may take a little while.")
+
+    col_model, row_model = HierarchicalClustering(pwd,
+                                                  gct_name,
+                                                  col_distance_metric,
+                                                  output_distances,
+                                                  row_distance_metric,
+                                                  clustering_method,
+                                                  output_base_name,
+                                                  row_normalization,
+                                                  col_normalization,
+                                                  row_centering,
+                                                  col_centering,
+                                                  custom_plot,
+                                                  clusters_to_highlight)
+    print("Done with Hierarchical Clustering!")
+
+    return col_model
+
+
+def hc_genes(
+        input_gene_expression: "gene expression data filename (.gct file) where rows are genes and columns are samples",
+        clustering_type: "single or consensus -- Only single is suported at the moment",
+        distance_metric: "the function to be used when comparing the distance/similarity of the rows in the "
+                         "input_gene_expression dataset",
+        file_basename: "the name to use when naming output files"='HC_out',
+        clusters_to_highlight: "how many clusters to highlight in the dendrogram"=None):
+
+    """
+    Perform hierarchical clustering to group genes with similar expression profile.
+    :param input_gene_expression: str; gene expression data filename (.gct file)
+    where rows are genes and columns are samples
+    :param clustering_type: str; single or consensus
+    :param distance_metric: str; the function to be used when comparing the distance/similarity of the rows
+    in the input_gene_expression dataset
+    :param file_basename: str; the name to use when naming output files
+    :param clusters_to_highlight: int; how many clusters to highlight in the dendrogram
+    :return: object; Sklearn's AgglomerativeClustering fitted model
+    """
+
+    print("Currenty clustering_type is being ignored, only 'single' is supported.")
+    pwd = '.'
+    gct_name = input_gene_expression
+    col_distance_metric = 'No_column_clustering'
+    output_distances = False
+    row_distance_metric = distance_metric
+    clustering_method = 'average'
+    output_base_name = file_basename
+    row_normalization = False
+    col_normalization = False
+    row_centering = 'Mean'
+    col_centering = 'Mean'
+    custom_plot = 'Genes'
+
+    # print("This are the parameters to be used (for debugging purposes)")
+    # print("""
+    # pwd = '.'
+    # gct_name = {gct_name}
+    # col_distance_metric = {col_distance_metric}
+    # output_distances = {output_distances}
+    # row_distance_metric = {row_distance_metric}
+    # clustering_method = {clustering_method}
+    # output_base_name = {output_base_name}
+    # row_normalization = {row_normalization}
+    # col_normalization = {col_normalization}
+    # row_centering = {row_centering}
+    # col_centering = {col_centering}
+    # """.format(
+    #     gct_name=gct_name, col_distance_metric=col_distance_metric,
+    #     output_distances=str(output_distances),
+    #     row_distance_metric=row_distance_metric, clustering_method=clustering_method,
+    #     output_base_name=output_base_name,
+    #     row_normalization=str(row_normalization), col_normalization=str(col_normalization),
+    #     row_centering=row_centering, col_centering=col_centering
+    # )
+    # )
+    print("Now we will start performing hierarchical clustering, this may take a little while.")
+
+    col_model, row_model = HierarchicalClustering(pwd,
+                                                  gct_name,
+                                                  col_distance_metric,
+                                                  output_distances,
+                                                  row_distance_metric,
+                                                  clustering_method,
+                                                  output_base_name,
+                                                  row_normalization,
+                                                  col_normalization,
+                                                  row_centering,
+                                                  col_centering,
+                                                  custom_plot,
+                                                  clusters_to_highlight)
+    print("Done with Hierarchical Clustering!")
+
+    return row_model
 
 def hc_samples(
         input_gene_expression: "gene expression data filename (.gct file) where rows are genes and columns are samples",
