@@ -1316,11 +1316,58 @@ def better_dendodist(children, distance, tree, data, axis, clustering_method='av
     return distances_list
 
 
-def HierarchicalClustering(pwd, gct_name, col_distance_metric, output_distances, row_distance_metric,
-                           clustering_method, output_base_name, row_normalization, col_normalization,
-                           row_centering, col_centering, custom_plot=None, clusters_to_highlight=None, show=False):
+def HierarchicalClustering(pwd: "The current directory",
+                           gct_name: "Gene expression data filename (.gct file) "
+                                     "where rows are genes and columns are samples",
+                           col_distance_metric: "The function to be used when comparing the distance/similarity of "
+                                                "the columns in the gct_name dataset",
+                           row_distance_metric: "The function to be used when comparing the distance/similarity of "
+                                                "the rows in the gct_name dataset",
+                           clustering_method: "Type of linkage to use" = 'average',
+                           output_base_name: "Base name for output file" = 'HC_output',
+                           row_normalization: "Whether to normalize each row (gene) in the data"=False,
+                           col_normalization: "Whether to normalize each column (sample) in the data"=False,
+                           row_centering: "How to center each row (gene) in the data"='Mean',
+                           col_centering: "How to center each column (sample) in the data"='Mean',
+                           output_distances: "Whether or not output the pair-wise distance matrix. "
+                                             "If true, the distance between each column will be called, "
+                                             "which can be very computationally intensive. "
+                                             "If unsure, leave as False." = False,
+                           custom_plot: "Plot the dendrograms by Genes, Samples, or Both" ='Both',
+                           clusters_to_highlight: "How many clusters to highlight in the dendrogram" = 2,
+                           show: "Whether to show the plot at the end" =False):
+    """
+    This function performs hierarchical clustering to group samples (columns) with similar phenotypes
+    and/or genes (rows) with similar expression profiles.
+    :param pwd: The current directory
+    :param gct_name: Gene expression data filename (.gct file) where rows are genes and columns are samples
+    :param col_distance_metric: The function to be used when comparing the distance/similarity of
+                                the columns in the gct_name dataset
+    :param row_distance_metric: The function to be used when comparing the distance/similarity of
+                                the rows in the gct_name dataset
+    :param clustering_method: Type of linkage to use
+    :param output_base_name: Base name for output file
+    :param row_normalization: Whether to normalize each row (gene) in the data
+    :param col_normalization: Whether to normalize each column (sample) in the data
+    :param row_centering: How to center each row (gene) in the data
+    :param col_centering: How to center each column (sample) in the data
+    :param output_distances: Whether or not output the pair-wise distance matrix.
+                             If true, the distance between each column will be called,
+                             which can be very computationally intensive.
+                             If unsure, leave as False
+    :param custom_plot: Plot the dendrograms by Genes, Samples, or Both
+    :param clusters_to_highlight: How many clusters to highlight in the dendrogram
+    :param show: Whether to show the plot at the end
+    :return:
+    """
+
     # gct_name, col_distance_metric, output_distances, row_distance_metric, clustering_method, output_base_name, \
     # row_normalization, col_normalization, row_centering, col_centering = parse_inputs(sys.argv)
+
+    if col_distance_metric == "No_column_clustering":
+        custom_plot = 'Genes'
+    if row_distance_metric == "No_row_clustering":
+        custom_plot = 'Samples'
 
     og_data, og_data_df, data, data_df, col_labels, row_labels, og_full_gct, new_full_gct = \
         parse_data(gct_name, row_normalization, col_normalization, row_centering, col_centering)
@@ -1601,7 +1648,6 @@ def hc_samples(
     col_model, row_model = HierarchicalClustering(pwd,
                                                   gct_name,
                                                   col_distance_metric,
-                                                  output_distances,
                                                   row_distance_metric,
                                                   clustering_method,
                                                   output_base_name,
@@ -1609,6 +1655,7 @@ def hc_samples(
                                                   col_normalization,
                                                   row_centering,
                                                   col_centering,
+                                                  output_distances,
                                                   custom_plot,
                                                   clusters_to_highlight,
                                                   show)
@@ -1679,7 +1726,6 @@ def hc_genes(
     col_model, row_model = HierarchicalClustering(pwd,
                                                   gct_name,
                                                   col_distance_metric,
-                                                  output_distances,
                                                   row_distance_metric,
                                                   clustering_method,
                                                   output_base_name,
@@ -1687,6 +1733,7 @@ def hc_genes(
                                                   col_normalization,
                                                   row_centering,
                                                   col_centering,
+                                                  output_distances,
                                                   custom_plot,
                                                   clusters_to_highlight,
                                                   show)
