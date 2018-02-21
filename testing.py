@@ -128,7 +128,8 @@ import cuzcatlan as cusca
 print("============================================================================")
 print("============================================================================")
 print("Testing hc_samples now...")
-input_gene_expression = "./tests/test_data/test_BRCA_minimal_60x19.gct"
+# input_gene_expression = "./tests/test_data/test_BRCA_minimal_60x19.gct"
+input_gene_expression = "https://datasets.genepattern.org/data/test_data/BRCA_minimal_60x19.gct"
 row_normalization = True
 col_normalization = False
 row_centering = 'Mean'

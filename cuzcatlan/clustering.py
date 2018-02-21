@@ -1838,9 +1838,16 @@ def display_heatmap(data,
         data_to_plot.set_index('Name', inplace=True)
         data_to_plot.drop('Description', axis=1, inplace=True)
     else:
-        print("I don't know what the variable 'data' contains  (╯°□°)╯︵ ┻━┻")
-        print('data=')
-        print(data)
+        try:
+            data_to_plot = pd.read_table(data, skiprows=2, sep='\t')
+        except urllib.error.HTTPError:
+            print("I don't know what the variable 'data' contains.")
+            print('data=')
+            print(data)
+            exit("If this is a url it may not be accessible.\n"
+                 "(╯°□°)╯︵ ┻━┻")
+        data_to_plot.set_index('Name', inplace=True)
+        data_to_plot.drop('Description', axis=1, inplace=True)
 
     data_to_plot = normalize_dataframe(data_to_plot, log_normalize=log_normalize,
                                        row_centering=row_centering, row_normalization=row_normalization,
