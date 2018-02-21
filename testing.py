@@ -1,3 +1,5 @@
+import cuzcatlan as cusca
+
 # import cuzcatlan as cusca
 # import pandas as pd
 # import numpy as np
@@ -63,55 +65,76 @@
 # #                              col_centering,
 # #                              custom_plot)
 
-import cuzcatlan as cusca
+# print("============================================================================")
+# print("============================================================================")
+# print("Testing hc_samples now...")
+# input_gene_expression = "./tests/test_data/test_BRCA_minimal_60x19.gct"
+# clustering_type = "Single"
+# distance_metric = "pearson"
+# file_basename = "test_COLS"
+# clusters_to_highlight = 2
+# cusca.hc_samples(input_gene_expression=input_gene_expression,
+#                  clustering_type=clustering_type,
+#                  distance_metric=distance_metric,
+#                  file_basename=file_basename,
+#                  clusters_to_highlight=clusters_to_highlight)
+#
+# print("============================================================================")
+# print("============================================================================")
+# print("Testing hc_genes now...")
+# input_gene_expression =  "./tests/test_data/test_BRCA_minimal_60x19.gct"
+# # input_gene_expression = "./tests/test_data/BRCA_minimal.gct"
+# clustering_type = "Single"
+# distance_metric = "pearson"
+# file_basename = "test_ROWS"
+# clusters_to_highlight = 3
+# cusca.hc_genes(input_gene_expression=input_gene_expression,
+#                clustering_type=clustering_type,
+#                distance_metric=distance_metric,
+#                file_basename=file_basename,
+#                clusters_to_highlight=clusters_to_highlight)
+#
+#
+# print("============================================================================")
+# print("============================================================================")
+# print("Testing BOTH now...")
+# pwd = '.'
+# gct_name = input_gene_expression
+# col_distance_metric = distance_metric
+# output_distances = False
+# row_distance_metric = distance_metric
+# clustering_method = 'average'
+# output_base_name = 'test_BOTH'
+# row_normalization = False
+# col_normalization = False
+# row_centering = 'Mean'
+# col_centering = 'Mean'
+# custom_plot = 'Both'
+# cusca.HierarchicalClustering(pwd,
+#                              gct_name,
+#                              col_distance_metric=col_distance_metric,
+#                              output_distances=output_distances,
+#                              row_distance_metric=row_distance_metric,
+#                              clustering_method=clustering_method,
+#                              output_base_name=output_base_name,
+#                              row_normalization=row_normalization,
+#                              col_normalization=col_normalization,
+#                              row_centering=row_centering,
+#                              col_centering=col_centering,
+#                              custom_plot=custom_plot,
+#                              clusters_to_highlight=clusters_to_highlight)
+
 
 print("============================================================================")
 print("============================================================================")
 print("Testing hc_samples now...")
 input_gene_expression = "./tests/test_data/test_BRCA_minimal_60x19.gct"
-clustering_type = "Single"
-distance_metric = "pearson"
-file_basename = "test_COLS"
-clusters_to_highlight = 2
-cusca.hc_samples(input_gene_expression, clustering_type, distance_metric, file_basename, clusters_to_highlight)
-
-print("============================================================================")
-print("============================================================================")
-print("Testing hc_genes now...")
-input_gene_expression =  "./tests/test_data/test_BRCA_minimal_60x19.gct"
-# input_gene_expression = "./tests/test_data/BRCA_minimal.gct"
-clustering_type = "Single"
-distance_metric = "pearson"
-file_basename = "test_ROWS"
-clusters_to_highlight = 3
-cusca.hc_genes(input_gene_expression, clustering_type, distance_metric, file_basename, clusters_to_highlight)
-
-
-print("============================================================================")
-print("============================================================================")
-print("Testing BOTH now...")
-pwd = '.'
-gct_name = input_gene_expression
-col_distance_metric = distance_metric
-output_distances = False
-row_distance_metric = distance_metric
-clustering_method = 'average'
-output_base_name = 'test_BOTH'
-row_normalization = False
+row_normalization = True
 col_normalization = False
 row_centering = 'Mean'
-col_centering = 'Mean'
-custom_plot = 'Both'
-cusca.HierarchicalClustering(pwd,
-                       gct_name,
-                       col_distance_metric,
-                       output_distances,
-                       row_distance_metric,
-                       clustering_method,
-                       output_base_name,
-                       row_normalization,
-                       col_normalization,
-                       row_centering,
-                       col_centering,
-                       custom_plot,
-                       clusters_to_highlight)
+col_centering = 'No'
+mostrar = False
+cusca.display_heatmap(data=input_gene_expression,
+                      row_centering=row_centering, row_normalization=row_normalization,
+                      col_centering=col_centering, col_normalization=col_normalization,
+                      mostrar=mostrar)

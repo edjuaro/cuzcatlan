@@ -23,6 +23,7 @@ from .information import *
 # check if these are repeated:
 import os
 import sys
+
 tasklib_path = os.path.dirname(os.path.realpath(sys.argv[0]))
 # sys.path.append(tasklib_path + "/ccalnoir")
 
@@ -40,9 +41,16 @@ import seaborn as sns
 from matplotlib import pyplot as plt
 from matplotlib import gridspec
 from sklearn.cluster import AgglomerativeClustering
+
 # from time import time
 # import cuzcatlan as cusca
 sns.set_style("white")
+import matplotlib as mpl
+
+mpl.rcParams['ytick.labelsize'] = 16
+mpl.rcParams['xtick.labelsize'] = 16
+mpl.rcParams['axes.titlesize'] = 24
+mpl.rcParams['axes.labelsize'] = 20
 
 SIGNIFICANT_DIGITS = 7
 
@@ -135,7 +143,6 @@ input_clustering_method = {
     'm': 'complete',
     'a': 'average',  # I think this is the default
 }
-
 
 input_row_centering = {
     # These are the values I expect
@@ -242,7 +249,7 @@ def parse_inputs(args=sys.argv):
         col_centering = None
 
         col_distance_metric = input_col_distance_dict[col_distance_metric]
-        if (output_distances == 'False') or (output_distances == 'F')\
+        if (output_distances == 'False') or (output_distances == 'F') \
                 or (output_distances == 'false') or (output_distances == 'f'):
             output_distances = False
         else:
@@ -569,12 +576,11 @@ def parse_inputs(args=sys.argv):
 
     print(args)
     return gct_name, col_distance_metric, output_distances, row_distance_metric, clustering_method, output_base_name, \
-        row_normalization, col_normalization, row_centering, col_centering
+           row_normalization, col_normalization, row_centering, col_centering
 
 
 def plot_dendrogram(model, data, tree, axis, dist=mydist, clustering_method='average',
                     title='no_title.png', color_threshold=None, orientation='top', **kwargs):
-
     #     plt.clf()
 
     # modified from https://github.com/scikit-learn/scikit-learn/pull/3464/files
@@ -595,10 +601,10 @@ def plot_dendrogram(model, data, tree, axis, dist=mydist, clustering_method='ave
         # og_distances = og_distances
         pass
     else:  # all the correlation similarities [-1,-1]
-        og_distances = [temp+1 for temp in og_distances]
+        og_distances = [temp + 1 for temp in og_distances]
 
     # Now that all similarities are nonnegative, we turn them into a distance for plotting purposes
-    og_distances = [1/temp for temp in og_distances]
+    og_distances = [1 / temp for temp in og_distances]
 
     #     print(og_distances)
     distance = np.cumsum(og_distances)
@@ -646,10 +652,10 @@ def plot_dendrogram(model, data, tree, axis, dist=mydist, clustering_method='ave
     if color_threshold is not None:
         if color_threshold == 1:
             color_threshold = 2
-        if color_threshold > (len(linkage_matrix)+1):
-            color_threshold = (len(linkage_matrix)+1)
+        if color_threshold > (len(linkage_matrix) + 1):
+            color_threshold = (len(linkage_matrix) + 1)
         # print('Finding the right cut')
-        color_threshold = linkage_matrix[-(color_threshold-1)][2] - np.finfo(float).eps
+        color_threshold = linkage_matrix[-(color_threshold - 1)][2] - np.finfo(float).eps
 
     R = dendrogram(linkage_matrix, color_threshold=color_threshold, orientation=orientation, **kwargs)
     #     R = dendrogram(linkage_matrix, **kwargs)
@@ -671,7 +677,7 @@ def plot_dendrogram(model, data, tree, axis, dist=mydist, clustering_method='ave
     return order_of_columns, linkage_matrix
 
 
-def order_leaves(model, data, tree, labels, axis=0, dist=mydist, reverse = False):
+def order_leaves(model, data, tree, labels, axis=0, dist=mydist, reverse=False):
     # Adapted from here: https://stackoverflow.com/questions/12572436/calculate-ordering-of-dendrogram-leaves
 
     children = model.children_
@@ -705,7 +711,7 @@ def order_leaves(model, data, tree, labels, axis=0, dist=mydist, reverse = False
 
 
 def two_plot_two_dendrogram(model, dist=mydist, **kwargs):
-    #modified from https://github.com/scikit-learn/scikit-learn/pull/3464/files
+    # modified from https://github.com/scikit-learn/scikit-learn/pull/3464/files
     # Children of hierarchical clustering
     children = model.children_
     # Distances between each pair of children
@@ -715,7 +721,7 @@ def two_plot_two_dendrogram(model, dist=mydist, **kwargs):
         distance = np.arange(len(distance))
 
     # The number of observations contained in each cluster level
-    no_of_observations = np.arange(2, children.shape[0]+2)
+    no_of_observations = np.arange(2, children.shape[0] + 2)
     # Create linkage matrix and then plot the dendrogram
     linkage_matrix = np.column_stack([children, distance, no_of_observations]).astype(float)
     # Plot the corresponding dendrogram
@@ -729,55 +735,55 @@ def two_plot_two_dendrogram(model, dist=mydist, **kwargs):
 
 
 def my_affinity_generic(M, metric):
-    return np.array([np.array([metric(a, b) for a in M])for b in M])
+    return np.array([np.array([metric(a, b) for a in M]) for b in M])
 
 
 def my_affinity_i(M):
-    return np.array([[information_coefficient_dist(a, b) for a in M]for b in M])
+    return np.array([[information_coefficient_dist(a, b) for a in M] for b in M])
 
 
 def my_affinity_ai(M):
-    return np.array([[absolute_information_coefficient_dist(a, b) for a in M]for b in M])
+    return np.array([[absolute_information_coefficient_dist(a, b) for a in M] for b in M])
 
 
 def my_affinity_p(M):
-    return np.array([[custom_pearson_dist(a, b) for a in M]for b in M])
+    return np.array([[custom_pearson_dist(a, b) for a in M] for b in M])
 
 
 def my_affinity_s(M):
-    return np.array([[custom_spearman_dist(a, b) for a in M]for b in M])
+    return np.array([[custom_spearman_dist(a, b) for a in M] for b in M])
 
 
 def my_affinity_k(M):
-    return np.array([[custom_kendall_tau_dist(a, b) for a in M]for b in M])
+    return np.array([[custom_kendall_tau_dist(a, b) for a in M] for b in M])
 
 
 def my_affinity_ap(M):
-    return np.array([[absolute_pearson_dist(a, b) for a in M]for b in M])
+    return np.array([[absolute_pearson_dist(a, b) for a in M] for b in M])
 
 
 def my_affinity_u(M):
-    return np.array([[uncentered_pearson_dist(a, b) for a in M]for b in M])
+    return np.array([[uncentered_pearson_dist(a, b) for a in M] for b in M])
 
 
 def my_affinity_au(M):
-    return np.array([[absolute_uncentered_pearson_dist(a, b) for a in M]for b in M])
+    return np.array([[absolute_uncentered_pearson_dist(a, b) for a in M] for b in M])
 
 
 def my_affinity_l1(M):
-    return np.array([[custom_manhattan_dist(a, b) for a in M]for b in M])
+    return np.array([[custom_manhattan_dist(a, b) for a in M] for b in M])
 
 
 def my_affinity_l2(M):
-    return np.array([[custom_euclidean_dist(a, b) for a in M]for b in M])
+    return np.array([[custom_euclidean_dist(a, b) for a in M] for b in M])
 
 
 def my_affinity_m(M):
-    return np.array([[custom_manhattan_dist(a, b) for a in M]for b in M])
+    return np.array([[custom_manhattan_dist(a, b) for a in M] for b in M])
 
 
 def my_affinity_c(M):
-    return np.array([[custom_cosine_dist(a, b) for a in M]for b in M])
+    return np.array([[custom_cosine_dist(a, b) for a in M] for b in M])
 
 
 def my_affinity_e(M):
@@ -830,9 +836,9 @@ def count_mislabels(labels, true_labels):
 
 
 def plot_heatmap(df, col_order, row_order, top=5, title_text='differentially expressed genes per phenotype'):
-    if not(len(col_order), len(list(df))):
+    if not (len(col_order), len(list(df))):
         exit("Number of columns in dataframe do not match the columns provided for ordering.")
-    if not(len(row_order), len(df)):
+    if not (len(row_order), len(df)):
         exit("Number of rows in dataframe do not match the columns provided for ordering.")
     # print(list(df), col_order)
     df = df[col_order]
@@ -849,7 +855,6 @@ def plot_heatmap(df, col_order, row_order, top=5, title_text='differentially exp
 
 
 def parse_data(gct_name, row_normalization=False, col_normalization=False, row_centering=None, col_centering=None):
-
     # if validators.url(gct_name):
     #     urlfile, __ = urllib.request.urlretrieve(gct_name)
     # else:
@@ -879,32 +884,36 @@ def parse_data(gct_name, row_normalization=False, col_normalization=False, row_c
 
     og_data = data.copy()
 
-    if row_centering is not None:
-        if row_centering == 'Mean':
-            row_means = np.mean(data, axis=1)
-            row_means_col_vec = row_means.reshape((data.shape[0], 1))
-            data = data - row_means_col_vec
-        if row_centering == 'Median':
-            row_medians = np.median(data, axis=1)
-            row_medians_col_vec = row_medians.reshape((data.shape[0], 1))
-            data = data - row_medians_col_vec
+    # if row_centering is not None:
+    #     if row_centering == 'Mean':
+    #         row_means = np.mean(data, axis=1)
+    #         row_means_col_vec = row_means.reshape((data.shape[0], 1))
+    #         data = data - row_means_col_vec
+    #     if row_centering == 'Median':
+    #         row_medians = np.median(data, axis=1)
+    #         row_medians_col_vec = row_medians.reshape((data.shape[0], 1))
+    #         data = data - row_medians_col_vec
+    #
+    # if row_normalization:
+    #     row_norm = np.sum(data * data, axis=1)
+    #     row_norm_col_vec = row_norm.reshape((data.shape[0], 1))
+    #     data = data / np.sqrt(row_norm_col_vec)
+    #
+    # if col_centering is not None:
+    #     if col_centering == 'Mean':
+    #         col_means = np.mean(data, axis=0)
+    #         data = data - col_means
+    #     if col_centering == 'Median':
+    #         col_medians = np.median(data, axis=0)
+    #         data = data - col_medians
+    #
+    # if col_normalization:
+    #     col_norm = np.sum(data*data, axis=0)
+    #     data = data/np.sqrt(col_norm)
 
-    if row_normalization:
-        row_norm = np.sum(data * data, axis=1)
-        row_norm_col_vec = row_norm.reshape((data.shape[0], 1))
-        data = data / np.sqrt(row_norm_col_vec)
-
-    if col_centering is not None:
-        if col_centering == 'Mean':
-            col_means = np.mean(data, axis=0)
-            data = data - col_means
-        if col_centering == 'Median':
-            col_medians = np.median(data, axis=0)
-            data = data - col_medians
-
-    if col_normalization:
-        col_norm = np.sum(data*data, axis=0)
-        data = data/np.sqrt(col_norm)
+    data = normalize_dataframe(data_df, log_normalize=None,
+                               row_centering=row_centering, row_normalization=row_normalization,
+                               col_centering=col_centering, col_normalization=col_normalization).as_matrix()
 
     # print(data_df)
     # print(data)
@@ -934,7 +943,6 @@ str2func = {
     'cosine': 'cosine',
     'euclidean': 'euclidean',
 }
-
 
 str2affinity_func = {
     'custom_euclidean': my_affinity_e,
@@ -1047,18 +1055,18 @@ def make_cdt(data, order_of_columns, order_of_rows, name='test.cdt', atr_compani
     if atr_companion:
         new_AID = ['', '']
         for element in range(len(order_of_columns)):
-            temp = 'ARRY'+str(element)+'X'
+            temp = 'ARRY' + str(element) + 'X'
             new_AID.append(temp)
 
         data.loc['AID'] = new_AID
         newIndex = ['AID'] + [ind for ind in data.index if ind != 'AID']
         data = data.reindex(index=newIndex)
-        data = data[['Name', 'GWEIGHT']+order_of_columns]
+        data = data[['Name', 'GWEIGHT'] + order_of_columns]
     if gtr_companion:
         new_GID = ['']
         if atr_companion:
             new_GID = ['AID', 'EWEIGHT']  # This is to make sure we fit the CDT format
-        # for element in np.sort(np.unique(GID)):
+            # for element in np.sort(np.unique(GID)):
             # if 'NODE' in element:
             #     # print(element, 'GTR delete')
             #     pass
@@ -1143,7 +1151,7 @@ def make_atr(col_tree_dic, data, dist, clustering_method='average', file_name='t
     return
 
 
-def make_gtr(row_tree_dic, data, dist, clustering_method='average',  file_name='test.gtr'):
+def make_gtr(row_tree_dic, data, dist, clustering_method='average', file_name='test.gtr'):
     max_val = len(row_tree_dic)
     # GID = []
 
@@ -1156,13 +1164,12 @@ def make_gtr(row_tree_dic, data, dist, clustering_method='average',  file_name='
 
     f = open(file_name, 'w')
     for node, children in row_tree_dic.items():
-
         elements = [translate_tree(node, max_val, 'gtr'), translate_tree(children[0], max_val, 'gtr'),
                     translate_tree(children[1], max_val, 'gtr'),
                     "{num:.{width}f}".format(num=distance_dic[node], width=SIGNIFICANT_DIGITS)]
         # GID.append(translate_tree(children[0], max_val, 'gtr'))
         # GID.append(translate_tree(children[1], max_val, 'gtr'))
-        f.write('\t'.join(elements)+'\n')
+        f.write('\t'.join(elements) + '\n')
         # val -= 1
     f.close()
 
@@ -1172,14 +1179,14 @@ def make_gtr(row_tree_dic, data, dist, clustering_method='average',  file_name='
 def translate_tree(what, length, g_or_a):
     if 'a' in g_or_a:
         if what <= length:
-            translation = 'ARRY'+str(what)+'X'
+            translation = 'ARRY' + str(what) + 'X'
         else:
-            translation = 'NODE' + str(what-length) + 'X'
+            translation = 'NODE' + str(what - length) + 'X'
     elif 'g' in g_or_a:
         if what <= length:
-            translation = 'GENE'+str(what)+'X'
+            translation = 'GENE' + str(what) + 'X'
         else:
-            translation = 'NODE' + str(what-length) + 'X'
+            translation = 'NODE' + str(what - length) + 'X'
     else:
         translation = []
         print('This function does not support g_or_a=', g_or_a)
@@ -1268,7 +1275,7 @@ def list_children_single_node(node, tree, leaves_are_self_children=False, only_l
     if only_leaves_are_children:
         # print(sorted(np.unique(i for i in children if i <= len(tree))))
         # print()
-        return [i for i in sorted(np.unique(children))if i <= len(tree)]
+        return [i for i in sorted(np.unique(children)) if i <= len(tree)]
     else:
         return sorted(np.unique(children))
 
@@ -1304,7 +1311,7 @@ def centroid_distances(node_a, node_b, tree, data, axis=0, distance=mydist, clus
 def euclidian_similarity(x, y):
     dist = mydist(x, y)
     # return 1/(1+dist)
-    return 1/(np.exp(dist))
+    return 1 / (np.exp(dist))
 
 
 def better_dendodist(children, distance, tree, data, axis, clustering_method='average'):
@@ -1325,17 +1332,17 @@ def HierarchicalClustering(pwd: "The current directory",
                                                 "the rows in the gct_name dataset",
                            clustering_method: "Type of linkage to use" = 'average',
                            output_base_name: "Base name for output file" = 'HC_output',
-                           row_normalization: "Whether to normalize each row (gene) in the data"=False,
-                           col_normalization: "Whether to normalize each column (sample) in the data"=False,
-                           row_centering: "How to center each row (gene) in the data"='Mean',
-                           col_centering: "How to center each column (sample) in the data"='Mean',
+                           row_normalization: "Whether to normalize each row (gene) in the data" = False,
+                           col_normalization: "Whether to normalize each column (sample) in the data" = False,
+                           row_centering: "How to center each row (gene) in the data" = 'Mean',
+                           col_centering: "How to center each column (sample) in the data" = 'Mean',
                            output_distances: "Whether or not output the pair-wise distance matrix. "
                                              "If true, the distance between each column will be called, "
                                              "which can be very computationally intensive. "
                                              "If unsure, leave as False." = False,
-                           custom_plot: "Plot the dendrograms by Genes, Samples, or Both" ='Both',
+                           custom_plot: "Plot the dendrograms by Genes, Samples, or Both" = 'Both',
                            clusters_to_highlight: "How many clusters to highlight in the dendrogram" = 2,
-                           show: "Whether to show the plot at the end" =False):
+                           show: "Whether to show the plot at the end" = False):
     """
     This function performs hierarchical clustering to group samples (columns) with similar phenotypes
     and/or genes (rows) with similar expression profiles.
@@ -1457,7 +1464,7 @@ def HierarchicalClustering(pwd: "The current directory",
 
         ax1 = plt.subplot(gs[1])
 
-        #Row-normalizing for display purposes only:
+        # Row-normalizing for display purposes only:
         data_df = data_df.subtract(data_df.min(axis=1), axis=0)
         data_df = data_df.div(data_df.max(axis=1), axis=0)
 
@@ -1503,7 +1510,7 @@ def HierarchicalClustering(pwd: "The current directory",
 
         ax1 = plt.subplot(gs[0])
 
-        #Row-normalizing for display purposes only:
+        # Row-normalizing for display purposes only:
         data_df = data_df.subtract(data_df.min(axis=1), axis=0)
         data_df = data_df.div(data_df.max(axis=1), axis=0)
 
@@ -1559,7 +1566,7 @@ def HierarchicalClustering(pwd: "The current directory",
         # Plotting the heatmap now
         ax1 = plt.subplot(gs[2])
 
-        #Row-normalizing for display purposes only:
+        # Row-normalizing for display purposes only:
         data_df = data_df.subtract(data_df.min(axis=1), axis=0)
         data_df = data_df.div(data_df.max(axis=1), axis=0)
 
@@ -1591,9 +1598,8 @@ def hc_samples(
         clustering_type: "single or consensus -- Only single is suported at the moment",
         distance_metric: "the function to be used when comparing the distance/similarity of the columns in the "
                          "input_gene_expression dataset",
-        file_basename: "the name to use when naming output files"='HC_out',
-        clusters_to_highlight: "how many clusters to highlight in the dendrogram"=None):
-
+        file_basename: "the name to use when naming output files" = 'HC_out',
+        clusters_to_highlight: "how many clusters to highlight in the dendrogram" = None):
     """
     Perform hierarchical clustering to group samples with similar phenotypes.
     :param input_gene_expression: str; gene expression data filename (.gct file)
@@ -1669,9 +1675,8 @@ def hc_genes(
         clustering_type: "single or consensus -- Only single is suported at the moment",
         distance_metric: "the function to be used when comparing the distance/similarity of the rows in the "
                          "input_gene_expression dataset",
-        file_basename: "the name to use when naming output files"='HC_out',
-        clusters_to_highlight: "how many clusters to highlight in the dendrogram"=None):
-
+        file_basename: "the name to use when naming output files" = 'HC_out',
+        clusters_to_highlight: "how many clusters to highlight in the dendrogram" = None):
     """
     Perform hierarchical clustering to group genes with similar expression profile.
     :param input_gene_expression: str; gene expression data filename (.gct file)
@@ -1740,3 +1745,145 @@ def hc_genes(
     print("Done with Hierarchical Clustering!")
 
     return row_model
+
+
+def normalize_dataframe(df, log_normalize=None,
+                        row_centering='Mean', row_normalization=True,
+                        col_centering='Mean', col_normalization=True):
+    """
+    This function Takes in a DataFrame and some flags and normalizes the data it contains. Order of operations is:
+        1- Log-normalize
+        2- Row (gene) center
+        3- Row (gene) normalize
+        4- Column (sample) center
+        5- Column (sample) normalize
+
+    :param df: (Pandas DataFrame) A DataFrame to be normalized
+    :param log_normalize:(float, None) Whether to log-normalize the data. Value is the base of the logarithm to use
+    :param row_centering: Whether or not to subtract the mean or median from every element of each row
+    :param row_normalization: Whether or not to set the maximum value of a row to 1 and the minimum value to 0
+    :param col_centering: Whether or not to subtract the mean or median from every element of each column
+    :param col_normalization: Whether or not to set the maximum value of a column to 1 and the minimum value to 0
+    :return:
+    """
+
+    if (log_normalize is None) \
+            and (row_centering == 'No') and (col_centering == 'No') \
+            and (row_normalization is False) and (col_normalization is False):
+        print("No normalization has been requested ಠ_ಠ¯")
+        return df
+
+    data = df.as_matrix()
+
+    # Log Normalizing
+    if log_normalize is not None:
+        print("I'm sorry, log-normalization is not supported at the moment (u_u)")
+
+    # Row Centering
+    if row_centering != 'No':
+        if row_centering == 'Mean':
+            row_means = np.mean(data, axis=1)
+            row_means_col_vec = row_means.reshape((data.shape[0], 1))
+            data = data - row_means_col_vec
+        elif row_centering == 'Median':
+            row_medians = np.median(data, axis=1)
+            row_medians_col_vec = row_medians.reshape((data.shape[0], 1))
+            data = data - row_medians_col_vec
+        else:
+            print("row_centering has an unexpected value:", row_centering)
+
+    # Row Normalizing
+    if row_normalization:
+        row_norm = np.sum(data * data, axis=1)
+        row_norm_col_vec = row_norm.reshape((data.shape[0], 1))
+        data = data / np.sqrt(row_norm_col_vec)
+
+    # Column Centering
+    if col_centering != 'No':
+        if col_centering == 'Mean':
+            col_means = np.mean(data, axis=0)
+            data = data - col_means
+        elif col_centering == 'Median':
+            col_medians = np.median(data, axis=0)
+            data = data - col_medians
+        else:
+            print("col_centering has an unexpected value: ", col_centering)
+
+    # Column Normalizing
+    if col_normalization:
+        col_norm = np.sum(data * data, axis=0)
+        data = data / np.sqrt(col_norm)
+
+    normalized_df = pd.DataFrame(data=data, index=df.index, columns=list(df))
+
+    return normalized_df
+
+
+def display_heatmap(data, name='heatmap', log_normalize=None, row_centering='No', row_normalization=True,
+                    col_centering='No', col_normalization=True,
+                    mostrar=False):
+    if log_normalize is not None:
+        print("I'm sorry, log-normalization is not supported at the moment (u_u)")
+
+    if data is DataFrame:
+        data_to_plot = data.copy
+    elif os.path.isfile(data):
+        data_to_plot = pd.read_table(data, skiprows=2, sep='\t')
+        data_to_plot.set_index('Name', inplace=True)
+        data_to_plot.drop('Description', axis=1, inplace=True)
+    else:
+        print("I don't know what the variable 'data' contains  (╯°□°)╯︵ ┻━┻")
+        print('data=')
+        print(data)
+
+    data_to_plot = normalize_dataframe(data_to_plot, log_normalize=log_normalize,
+                                       row_centering=row_centering, row_normalization=row_normalization,
+                                       col_centering=col_centering, col_normalization=col_normalization)
+
+    plt.clf()
+
+    # # figure reshape from:
+    # # https://stackoverflow.com/questions/35127920/overlapping-yticklabels-is-it-possible-to-control-cell-size-of-heatmap-in-seabo
+    # # and from:
+    # # https://matplotlib.org/users/customizing.html
+
+    # get the tick label font size
+    fontsize_pt = plt.rcParams['ytick.labelsize']
+    dpi = 72.27
+
+    # compute the matrix height in points and inches
+    matrix_height_pt = fontsize_pt * data_to_plot.as_matrix().shape[0]
+    matrix_height_in = (matrix_height_pt / dpi) * 1.2
+
+    # compute the required figure height
+    top_margin = 0.01  # in percentage of the figure height
+    bottom_margin = 0.01  # in percentage of the figure height
+    figure_height = matrix_height_in / (1 - top_margin - bottom_margin)
+
+    # build the figure instance with the desired height
+    fig, ax = plt.subplots(
+        figsize=(6, figure_height),
+        gridspec_kw=dict(top=1 - top_margin, bottom=bottom_margin))
+
+    sns.heatmap(data_to_plot, cmap='bwr', yticklabels=True, square=True,
+                cbar_kws={'use_gridspec': False,
+                          'location': "right",
+                          'shrink': 0.5,
+                          'label': ''}
+
+                )
+
+    if mostrar:
+        print(data_to_plot.head())
+        plt.show()
+
+    if not name.endswith('.pdf'):
+        name = name + '.pdf'
+
+    plt.savefig(name, dpi=dpi, bbox_inches='tight')
+    # plt.savefig(name, dpi=dpi)
+    print(name, "has been created!")
+
+    print("The PDF of this heatmap can be downloaded here:")
+    display(HTML('<a href="' + name + '" target="_blank">PDF of the heatmap</a>'))
+    return
