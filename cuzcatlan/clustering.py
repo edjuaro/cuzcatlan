@@ -1886,16 +1886,16 @@ def display_heatmap(data,
 
                 )
 
-    if mostrar:
-        print(data_to_plot.head())
-        plt.show()
-
     if not name.endswith('.pdf'):
         name = name + '.pdf'
 
     plt.savefig(name, dpi=dpi, bbox_inches='tight')
     # plt.savefig(name, dpi=dpi)
     print(name, "has been created!")
+
+    if mostrar:
+        # print(data_to_plot.head())
+        plt.show()
 
     print("The PDF of this heatmap can be downloaded here:")
     display(HTML('<a href="' + name + '" target="_blank">PDF of the heatmap</a>'))
