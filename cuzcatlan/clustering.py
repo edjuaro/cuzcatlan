@@ -1819,9 +1819,15 @@ def normalize_dataframe(df, log_normalize=None,
     return normalized_df
 
 
-def display_heatmap(data, name='heatmap', log_normalize=None, row_centering='No', row_normalization=True,
-                    col_centering='No', col_normalization=True,
+def display_heatmap(data,
+                    name='heatmap',
+                    log_normalize=None,
+                    row_centering: "How to center each row (gene) in the data" = 'No',
+                    row_normalization: "Whether to normalize each row (gene) in the data" = True,
+                    col_centering: "How to center each column (sample) in the data" = 'No',
+                    col_normalization: "Whether to normalize each column (sample) in the data" = True,
                     mostrar=False):
+
     if log_normalize is not None:
         print("I'm sorry, log-normalization is not supported at the moment (u_u)")
 
