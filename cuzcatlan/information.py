@@ -1,6 +1,5 @@
 """Parts of this code are borrowed from the CCAL library: https://github.com/UCSD-CCAL"""
-
-
+import sys
 from numpy import asarray, exp, finfo, isnan, log, sign, sqrt, sum, sort, array, concatenate, where, nan_to_num, \
     apply_along_axis, array_split, empty, unique
 from numpy.random import random_sample, seed, randint, choice, get_state, set_state, shuffle
@@ -13,7 +12,11 @@ from os import mkdir, remove
 from os.path import abspath, exists, isdir, islink, split, isfile
 from shutil import copy, copytree, rmtree
 from math import ceil, floor
-from matplotlib.pyplot import savefig, figure, subplot, gca, sca, suptitle, show
+sys.stdout.flush()
+import matplotlib.pyplot as plt
+sys.stdout.flush()
+# from matplotlib.pyplot import
+from matplotlib.pyplot import figure, subplot, savefig, gca, sca, suptitle, show
 from matplotlib.gridspec import GridSpec
 from matplotlib.cm import Paired, Set3, bwr, tab20, tab20b, tab20c
 from scipy.cluster.hierarchy import dendrogram, linkage
@@ -262,7 +265,11 @@ def differential_gene_expression(
     :param random_seed: int | array; random number generator seed (can be set to a user supplied integer for reproducibility)
     :return: DataFrame; table of genes ranked by Information Coeff vs. phenotype
     """
-    data_df = pd.read_table(gene_expression, header=2, index_col=0)
+    try:
+        data_df = pd.read_table(gene_expression, header=2, index_col=0)
+    except ValueError:
+        data_df = gene_expression
+
     try:
         data_df.drop('Description', axis=1, inplace=True)
     except KeyError:

@@ -863,14 +863,21 @@ def parse_data(gct_name, row_normalization=False, col_normalization=False, row_c
     # f.readline()
     # size = f.readline().strip('\n').split('\t')
 
-    data_df = pd.read_csv(gct_name, sep='\t', skiprows=2)
+    try:
+        data_df = pd.read_csv(gct_name, sep='\t', skiprows=2)
+    except ValueError:
+        data_df = gct_name
     # print(size)
     # print(list(data_df))
     # exit(data_df.shape)
 
-    if 'Name' not in list(data_df):
-        data_df['Name'] = data_df.iloc[:, 0]
-        data_df.drop(data_df.columns[0], axis=1, inplace=True)
+    if data_df.index.name is 'Name':
+        data_df['Name'] = data_df.index
+    else:
+        if 'Name' not in list(data_df):
+            data_df['Name'] = data_df.iloc[:, 0]
+            data_df.drop(data_df.columns[0], axis=1, inplace=True)
+
     if 'Description' not in list(data_df):
         data_df['Description'] = data_df['Name']
 
@@ -1324,7 +1331,7 @@ def better_dendodist(children, distance, tree, data, axis, clustering_method='av
 
 
 def HierarchicalClustering(pwd: "The current directory",
-                           gct_name: "Gene expression data filename (.gct file) "
+                           gct_name: "Gene expression data filename (.gct file) or Pandas DataFrame "
                                      "where rows are genes and columns are samples",
                            col_distance_metric: "The function to be used when comparing the distance/similarity of "
                                                 "the columns in the gct_name dataset",
@@ -1347,7 +1354,8 @@ def HierarchicalClustering(pwd: "The current directory",
     This function performs hierarchical clustering to group samples (columns) with similar phenotypes
     and/or genes (rows) with similar expression profiles.
     :param pwd: The current directory
-    :param gct_name: Gene expression data filename (.gct file) where rows are genes and columns are samples
+    :param gct_name: Gene expression data filename (.gct file) or Pandas DataFrame where rows are genes and
+                        columns are samples
     :param col_distance_metric: The function to be used when comparing the distance/similarity of
                                 the columns in the gct_name dataset
     :param row_distance_metric: The function to be used when comparing the distance/similarity of
@@ -1825,14 +1833,11 @@ def display_heatmap(data,
                     row_centering: "How to center each row (gene) in the data" = 'No',
                     row_normalization: "Whether to normalize each row (gene) in the data" = True,
                     col_centering: "How to center each column (sample) in the data" = 'No',
-                    col_normalization: "Whether to normalize each column (sample) in the data" = True,
+                    col_normalization: "Whether to normalize each column (sample) in the data" = False,
                     mostrar=False):
 
-    if log_normalize is not None:
-        print("I'm sorry, log-normalization is not supported at the moment (u_u)")
-
-    if data is DataFrame:
-        data_to_plot = data.copy
+    if isinstance(data, pd.DataFrame):
+        data_to_plot = data.copy()
     elif os.path.isfile(data):
         data_to_plot = pd.read_table(data, skiprows=2, sep='\t')
         data_to_plot.set_index('Name', inplace=True)

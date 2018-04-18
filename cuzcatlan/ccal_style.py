@@ -1,5 +1,7 @@
+import sys
 from matplotlib.cm import Paired, Set3, bwr, tab20, tab20b, tab20c
 from matplotlib.colors import LinearSegmentedColormap, ListedColormap
+
 
 # =============================================================================+
 # Figure

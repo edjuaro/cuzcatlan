@@ -1,7 +1,6 @@
 import scipy
 import numpy as np
 
-
 def hellopipilworld():
     return u'Niltze Cemanahuac! (Hello "World"! in Nahuatl.)'
 
