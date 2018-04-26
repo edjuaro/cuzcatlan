@@ -38,32 +38,35 @@ import cuzcatlan as cusca
 #
 # print(scores.iloc[0:2*TOP, :])
 
-# print("Testing HC now...")
-# pwd = '.'
-# gct_name = "./tests/test_data/test_BRCA_minimal_60x19.gct"
-# col_distance_metric = "pearson"
-# output_distances = False
-# row_distance_metric = 'No_row_clustering'
-# clustering_method = 'average'
-# output_base_name = 'OC_HC'
-# row_normalization = False
-# col_normalization = False
-# row_centering = 'Mean'
-# col_centering = 'Mean'
-# custom_plot = True
-#
-# # cusca.HierarchicalClustering(pwd,
-# #                              gct_name,
-# #                              col_distance_metric,
-# #                              output_distances,
-# #                              row_distance_metric,
-# #                              clustering_method,
-# #                              output_base_name,
-# #                              row_normalization,
-# #                              col_normalization,
-# #                              row_centering,
-# #                              col_centering,
-# #                              custom_plot)
+print("Testing HC now...")
+pwd = '.'
+gct_name = "./tests/test_data/test_BRCA_minimal_60x19.gct"
+gct_name = "./tests/test_data/RNA_TEST.gct"
+col_distance_metric = "pearson"
+output_distances = False
+row_distance_metric = 'No_row_clustering'
+clustering_method = 'average'
+output_base_name = 'OC_HC'
+row_normalization = True
+col_normalization = True
+row_centering = 'Mean'
+col_centering = 'Mean'
+custom_plot = 'Samples'
+
+cusca.HierarchicalClustering(pwd = '.',
+                             gct_name = gct_name,
+                             col_distance_metric = 'pearson',
+                             row_distance_metric = 'No_row_clustering',
+                             clustering_method = 'average',#'complete',
+                             output_base_name = output_base_name,
+                             row_normalization = True,
+                             col_normalization = True,
+                             row_centering = 'Mean',
+                             col_centering = 'Mean',
+                             output_distances=False,
+                             custom_plot = 'Samples',
+                             clusters_to_highlight = 5,
+                             show = True)
 
 # print("============================================================================")
 # print("============================================================================")
@@ -72,7 +75,7 @@ import cuzcatlan as cusca
 # clustering_type = "Single"
 # distance_metric = "pearson"
 # file_basename = "test_COLS"
-# clusters_to_highlight = 2
+# clusters_to_highlight = 5
 # cusca.hc_samples(input_gene_expression=input_gene_expression,
 #                  clustering_type=clustering_type,
 #                  distance_metric=distance_metric,
@@ -125,17 +128,17 @@ import cuzcatlan as cusca
 #                              clusters_to_highlight=clusters_to_highlight)
 
 
-print("============================================================================")
-print("============================================================================")
-print("Testing hc_samples now...")
-# input_gene_expression = "./tests/test_data/test_BRCA_minimal_60x19.gct"
-input_gene_expression = "https://datasets.genepattern.org/data/test_data/BRCA_minimal_60x19.gct"
-row_normalization = True
-col_normalization = False
-row_centering = 'Mean'
-col_centering = 'No'
-mostrar = False
-cusca.display_heatmap(data=input_gene_expression,
-                      row_centering=row_centering, row_normalization=row_normalization,
-                      col_centering=col_centering, col_normalization=col_normalization,
-                      mostrar=mostrar)
+# print("============================================================================")
+# print("============================================================================")
+# print("Testing hc_samples now...")
+# # input_gene_expression = "./tests/test_data/test_BRCA_minimal_60x19.gct"
+# input_gene_expression = "https://datasets.genepattern.org/data/test_data/BRCA_minimal_60x19.gct"
+# row_normalization = True
+# col_normalization = False
+# row_centering = 'Mean'
+# col_centering = 'No'
+# mostrar = False
+# cusca.display_heatmap(data=input_gene_expression,
+#                       row_centering=row_centering, row_normalization=row_normalization,
+#                       col_centering=col_centering, col_normalization=col_normalization,
+#                       mostrar=mostrar)

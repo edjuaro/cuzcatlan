@@ -17,6 +17,7 @@ import itertools
 from sklearn.cluster import AgglomerativeClustering
 import scipy
 import itertools
+from collections import defaultdict
 from .elemental import *
 from .information import *
 
@@ -648,6 +649,9 @@ def plot_dendrogram(model, data, tree, axis, dist=mydist, clustering_method='ave
     # print(linkage_matrix)
     # Plot the corresponding dendrogram
 
+    # print(scipy.cluster.hierarchy.cut_tree(linkage_matrix, n_clusters=5))
+    # print(color_threshold)
+
     # find what the height at which to cut the dendrogram
     if color_threshold is not None:
         if color_threshold == 1:
@@ -656,6 +660,8 @@ def plot_dendrogram(model, data, tree, axis, dist=mydist, clustering_method='ave
             color_threshold = (len(linkage_matrix) + 1)
         # print('Finding the right cut')
         color_threshold = linkage_matrix[-(color_threshold - 1)][2] - np.finfo(float).eps
+        # color_threshold = linkage_matrix[-(color_threshold - 1)][2] + 10*np.finfo(float).eps  # Adding more wiggle room
+    # print(color_threshold)
 
     R = dendrogram(linkage_matrix, color_threshold=color_threshold, orientation=orientation, **kwargs)
     #     R = dendrogram(linkage_matrix, **kwargs)
@@ -674,7 +680,63 @@ def plot_dendrogram(model, data, tree, axis, dist=mydist, clustering_method='ave
     #     c2 = [c2] if c2 < n else cache.pop(c2)
     #     cache[n + k] = c1 + c2
     # order_of_columns = cache[2 * len(linkage_matrix)]
+
+    # print(order_of_columns)
+    # print(linkage_matrix)
+    # print("---")
+    # print(no_of_observations)
+    # print("---")
+    # print(list_of_children)
+    # print("---")
+    #
+    # print(len(order_of_columns))
+    # print(color_threshold)
+    # clusters2idxs, idxs2clusters = get_cluster_classes(R)
+    #
+    # print(clusters2idxs)
+    # print(idxs2clusters)
+    # print("---")
+    # print(get_children(tree, leaves_are_self_children=False))
+    # print("---")
+    # print(get_children(tree, leaves_are_self_children=False, only_leaves_are_children=False))
+
+
     return order_of_columns, linkage_matrix
+
+
+def get_clusters(tree):
+    return
+
+
+
+def get_cluster_classes(den, label='ivl'):
+    # from http://www.nxn.se/valent/extract-cluster-elements-by-color-in-python
+    clusters2idxs = defaultdict(list)
+    idxs2clusters = {}
+    # for c, pi in zip(den['color_list'], den['icoord']):
+    #     for leg in pi[1:3]:
+    #         i = (leg - 5.0) / 10.0
+    #         if abs(i - int(i)) < 1e-5:
+    #             clusters2idxs[c].append(int(i))
+    #             idxs2clusters[int(i)] = c
+    #             # print(c, i)
+
+    # cluster_classes = Clusters()
+    # for c, l in cluster_idxs.items():
+    #     i_l = [den[label][i] for i in l]
+    #     cluster_classes[c] = i_l
+
+    # Trying something new:
+    print(den.keys())
+    print(len(den['icoord']))
+    print(len(den['dcoord']))
+    print(len(den['ivl']))
+    print(len(den['leaves']))
+    print(den['leaves'])
+    print(len(den['color_list']))
+    print(den['color_list'])
+
+    return clusters2idxs, idxs2clusters
 
 
 def order_leaves(model, data, tree, labels, axis=0, dist=mydist, reverse=False):
@@ -1407,7 +1469,7 @@ def HierarchicalClustering(pwd: "The current directory",
 
     if col_distance_metric != 'No_column_clustering':
         atr_companion = True
-        col_model = AgglomerativeClustering(linkage=linkage_dic[clustering_method], n_clusters=2,
+        col_model = AgglomerativeClustering(linkage=linkage_dic[clustering_method], n_clusters=clusters_to_highlight,
                                             affinity=str2func[col_distance_metric])
 
         col_model.fit(data_transpose)
@@ -1421,7 +1483,7 @@ def HierarchicalClustering(pwd: "The current directory",
 
     if row_distance_metric != 'No_row_clustering':
         gtr_companion = True
-        row_model = AgglomerativeClustering(linkage=linkage_dic[clustering_method], n_clusters=2,
+        row_model = AgglomerativeClustering(linkage=linkage_dic[clustering_method], n_clusters=clusters_to_highlight,
                                             affinity=str2func[row_distance_metric])
         # y_col = row_model.fit_predict(np.transpose(data))
         # print(y_col)
@@ -1461,14 +1523,18 @@ def HierarchicalClustering(pwd: "The current directory",
         ax0 = plt.subplot(gs[0])  # Doing dendrogram first
         ax0.axis('off')
 
-        col_order, link = plot_dendrogram(col_model, data, col_tree, axis=1, dist=str2similarity[col_distance_metric],
-                                          clustering_method=clustering_method, color_threshold=clusters_to_highlight,
-                                          title='no_title.png', orientation='top')
+        col_order, link = plot_dendrogram(col_model, data, col_tree, axis=1,
+                                                       dist=str2similarity[col_distance_metric],
+                                                       clustering_method=clustering_method,
+                                                       color_threshold=clusters_to_highlight,
+                                                       title='no_title.png', orientation='top')
         col_order = [int(i) for i in col_order]
 
         # print(col_order)
         named_col_order = [col_labels[i] for i in col_order]
         # print(named_col_order)
+        # print(col_order)
+        # print(col_model.labels_)
 
         ax1 = plt.subplot(gs[1])
 
@@ -1494,7 +1560,27 @@ def HierarchicalClustering(pwd: "The current directory",
         print("----------------------------------------------------------------------")
 
         if show:
-            plt.show()
+            # plt.show()
+            pass
+
+        # col_order = [int(i) for i in col_order]
+        # print(col_order)
+        # named_col_order = [col_labels[i] for i in col_order]
+        # print(named_col_order)
+        # print(col_order)
+        # print(idxs2clusters)
+        cls_list = col_model.labels_
+        # for i in range(len(col_order)):
+        #     cls_list.append(idxs2clusters[i])
+        # print(cls_list)
+        # order_by = [col_order.index(i) for i in range(len(col_order))]
+        # list2intlist(cls_list, custom_order=order_by)
+        # in_list = np.array(cls_list)
+        # print(cls_list)
+        # print(np.array(list2intlist(cls_list, custom_order=order_by)))
+
+        list2cls(np.array(list2intlist(cls_list)), name_of_out=output_base_name+'.cls', sep=' ')
+
 
     if custom_plot == 'Genes':
         # Plotting the heatmap with dendrogram
@@ -1507,11 +1593,10 @@ def HierarchicalClustering(pwd: "The current directory",
         ax0.axis('off')
 
         row_order, link = plot_dendrogram(row_model, data_transpose, row_tree, axis=1,
-                                          dist=str2similarity[row_distance_metric],
-                                          clustering_method=clustering_method,
-                                          color_threshold=clusters_to_highlight,
-                                          orientation='right',
-                                          title='no_title.png')
+                                                      dist=str2similarity[row_distance_metric],
+                                                      clustering_method=clustering_method,
+                                                      color_threshold=clusters_to_highlight,
+                                                      orientation='right', title='no_title.png')
         # row_order = [int(i) for i in row_order]
 
         # named_row_order = [row_labels[i] for i in row_order]
@@ -1554,9 +1639,11 @@ def HierarchicalClustering(pwd: "The current directory",
         ax0 = plt.subplot(gs[0])
         ax0.axis('off')
 
-        col_order, link = plot_dendrogram(col_model, data, col_tree, axis=1, dist=str2similarity[col_distance_metric],
-                                          clustering_method=clustering_method, color_threshold=clusters_to_highlight,
-                                          title='no_title.png', orientation='top')
+        col_order, link = plot_dendrogram(col_model, data, col_tree, axis=1,
+                                                               dist=str2similarity[col_distance_metric],
+                                                               clustering_method=clustering_method,
+                                                               color_threshold=clusters_to_highlight,
+                                                               title='no_title.png', orientation='top')
         col_order = [int(i) for i in col_order]
         named_col_order = [col_labels[i] for i in col_order]
 
@@ -1565,11 +1652,10 @@ def HierarchicalClustering(pwd: "The current directory",
         ax3.axis('off')
 
         row_order, link = plot_dendrogram(row_model, data_transpose, row_tree, axis=1,
-                                          dist=str2similarity[row_distance_metric],
-                                          clustering_method=clustering_method,
-                                          color_threshold=clusters_to_highlight,
-                                          orientation='right',
-                                          title='no_title.png')
+                                                               dist=str2similarity[row_distance_metric],
+                                                               clustering_method=clustering_method,
+                                                               color_threshold=clusters_to_highlight,
+                                                               orientation='right', title='no_title.png')
 
         # Plotting the heatmap now
         ax1 = plt.subplot(gs[2])
@@ -1597,6 +1683,7 @@ def HierarchicalClustering(pwd: "The current directory",
 
         if show:
             plt.show()
+
 
     return col_model, row_model
 

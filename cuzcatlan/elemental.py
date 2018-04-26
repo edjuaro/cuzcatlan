@@ -1,8 +1,22 @@
 import scipy
 import numpy as np
+import pandas as pd
 
 def hellopipilworld():
     return u'Niltze Cemanahuac! (Hello "World"! in Nahuatl.)'
+
+
+def list2intlist(in_list, custom_order=None):
+    unique_labels = pd.unique(in_list)
+    translate = dict(zip(unique_labels, range(len(unique_labels))))
+    if custom_order is not None:
+        # print(in_list)
+        new_list = [in_list[j] for j in custom_order]
+        # print(new_list)
+        # print([translate[i] for i in new_list])
+        return [translate[i] for i in new_list]
+    else:
+        return [translate[i] for i in in_list]
 
 
 def list2cls(in_list, name_of_out='output.cls', sep='\t'):
