@@ -1870,9 +1870,9 @@ def normalize_dataframe(df, log_normalize=None,
 
     data = df.as_matrix()
 
-    # Log Normalizing
-    if log_normalize is not None:
-        print("I'm sorry, log-normalization is not supported at the moment (u_u)")
+    # # Log Normalizing
+    # if log_normalize is not None:
+    #     print("I'm sorry, log-normalization is not supported at the moment (u_u)")
 
     # Row Centering
     if row_centering != 'No':
