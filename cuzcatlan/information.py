@@ -275,12 +275,15 @@ def differential_gene_expression(
     except KeyError:
         pass
 
-    if validators.url(phenotype_file):
-        urlfile, __ = urllib.request.urlretrieve(phenotype_file)
-    else:
-        urlfile = phenotype_file
+    try:
+        temp = open(phenotype_file)
+    except FileNotFoundError:
+        if validators.url(phenotype_file):
+            urlfile, __ = urllib.request.urlretrieve(phenotype_file)
+        else:
+            urlfile = phenotype_file
 
-    temp = open(urlfile)
+        temp = open(urlfile)
     temp.readline()
     temp.readline()
     classes = [int(i) for i in temp.readline().strip('\n').split(' ')]
